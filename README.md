@@ -9,6 +9,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
 | v5.53.0 | [`v5.53.0`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.53.0) | [`edc52fb`](https://github.com/plengauer/Thoth/commit/edc52fb91829fdeee2e8a04b745d8f4fee33157d) |
+| v5.53.1 | [`v5.53.1`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.53.1) | [`19061f1`](https://github.com/plengauer/Thoth/commit/19061f1e87c01ed291ee56e45dacad3118106ffd) |
 
 ## Privacy
 
