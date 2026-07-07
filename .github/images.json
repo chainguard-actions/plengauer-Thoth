@@ -1,0 +1,44 @@
+{
+  "debian": {
+    "oldest": "debian:bookworm",
+    "stable": "debian:bookworm",
+    "latest": "debian:trixie",
+    "dev": "debian:sid"
+  },
+  "debian-slim": {
+    "oldest": "debian:bookworm-slim",
+    "stable": "debian:bookworm-slim",
+    "latest": "debian:trixie-slim",
+    "dev": "debian:sid-slim"
+  },
+  "ubuntu": {
+    "oldest": "ubuntu:noble",
+    "stable": "ubuntu:questing",
+    "latest": "ubuntu:resolute",
+    "dev": "ubuntu:stonking"
+  },
+  "fedora": {
+    "oldest": "fedora:43",
+    "stable": "fedora:44",
+    "latest": "fedora:44",
+    "dev": "fedora:rawhide"
+  },
+  "rhel": {
+    "oldest": "redhat/ubi8:latest",
+    "stable": "redhat/ubi9:latest",
+    "latest": "redhat/ubi10:latest",
+    "dev": "redhat/ubi10:latest"
+  },
+  "opensuse": {
+    "oldest": "opensuse/leap:16.0",
+    "stable": "opensuse/leap:16.0",
+    "latest": "opensuse/tumbleweed:latest",
+    "dev": "opensuse/tumbleweed:latest"
+  },
+  "alpine": {
+    "oldest": "alpine:3.21",
+    "stable": "alpine:3.23",
+    "latest": "alpine:3.24",
+    "dev": "alpine:3.24"
+  }
+}

@@ -1,0 +1,33 @@
+name: Autoversion
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *'
+  push:
+    branches:
+      - 'release/v*.*'
+
+concurrency:
+  group: bump-version-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    if: ${{ !github.event.repository.fork }}
+    runs-on: ubuntu-slim
+    steps:
+      - uses: plengauer/opentelemetry-github/actions/instrument/job@5d8cb00c1ec6a0a9772f30e7c3045d87b9f6609e # v5.58.0
+        with:
+          secrets_to_redact: '["${{ github.token }}","${{ secrets.ACTIONS_GITHUB_TOKEN }}","${{ secrets.OPENAI_TOKEN }}"]'
+        env:
+          OTEL_EXPORTER_OTLP_ENDPOINT: '${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}'
+          OTEL_EXPORTER_OTLP_HEADERS: '${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}'
+      - uses: plengauer/autoversion@badee98ba4eb3a38f99cf8acab7f5510e7e8736f # v5.0.0
+        with:
+          github_token: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          openai_token: ${{ secrets.OPENAI_TOKEN }}
+          path_include: ./meta:./src:./actions
+          increments: ${{ github.ref_name == 'main' && 'major;minor' || 'patch' }}
+    permissions:
+      actions: read

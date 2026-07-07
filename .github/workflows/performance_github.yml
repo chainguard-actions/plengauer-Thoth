@@ -1,0 +1,78 @@
+name: 'Performance GitHub Job'
+
+on:
+  push:
+    paths:
+      - .github/workflows/performance_github.yml
+    branches:
+      - main
+
+env:
+  OTEL_EXPORTER_OTLP_ENDPOINT: '${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}'
+  OTEL_EXPORTER_OTLP_HEADERS: '${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}'
+
+jobs:
+
+  warmup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: plengauer/opentelemetry-github/actions/instrument/job@5d8cb00c1ec6a0a9772f30e7c3045d87b9f6609e # v5.58.0
+        with:
+          secrets_to_redact: '["${{ github.token }}"]'
+      - run: echo hello world
+
+  baseline:
+    needs: [ warmup ]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - run: echo hello world | cat
+
+  default:
+    needs: [ warmup ]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: plengauer/opentelemetry-github/actions/instrument/job@5d8cb00c1ec6a0a9772f30e7c3045d87b9f6609e # v5.58.0
+        with:
+          secrets_to_redact: '["${{ github.token }}"]'
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - run: echo hello world | cat
+
+  performance:
+    needs: [ warmup ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cache: [ 'false', 'true' ]
+        observe-pipes: [ 'FALSE', 'TRUE' ]
+        mute-internals: [ 'FALSE', 'TRUE' ]
+        mute-builtins: [ 'FALSE', 'TRUE' ]
+        inject-deep: [ 'FALSE', 'TRUE' ]
+        observe-signals: [ 'FALSE', 'TRUE' ]
+        observe-subprocesses: [ 'FALSE', 'TRUE' ]
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: plengauer/opentelemetry-github/actions/instrument/job@5d8cb00c1ec6a0a9772f30e7c3045d87b9f6609e # v5.58.0
+        with:
+          secrets_to_redact: '["${{ github.token }}"]'
+          cache: '${{ matrix.cache }}'
+        env:
+          OTEL_SHELL_CONFIG_OBSERVE_PIPES: '${{ matrix.observe-pipes }}'
+          OTEL_SHELL_CONFIG_MUTE_INTERNALS: '${{ matrix.mute-internals }}'
+          OTEL_SHELL_CONFIG_MUTE_BUILTINS: '${{ matrix.mute-builtins }}'
+          OTEL_SHELL_CONFIG_INJECT_DEEP: '${{ matrix.inject-deep }}'
+          OTEL_SHELL_CONFIG_OBSERVE_SIGNALS: '${{ matrix.observe-signals }}'
+          OTEL_SHELL_CONFIG_OBSERVE_SUBPROCESSES: '${{ matrix.observe-subprocesses }}'
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - run: echo hello world | cat
