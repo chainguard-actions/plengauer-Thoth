@@ -53,20 +53,20 @@ jobs:
         run: |
           debian_architecture="$(echo "$MATRIX_ARCHITECTURE" | cut -d / -f 1 | sed 's/le$/el/g')"
           arch_nodash="$(echo "$MATRIX_ARCHITECTURE" | tr -d /)"
-          if curl -s -L https://deb.debian.org/debian/dists/oldstable/main | grep -q binary-"$debian_architecture" && sudo docker pull --platform "linux/$MATRIX_ARCHITECTURE" docker.io/"$arch_nodash"/debian:oldstable; then
+          if curl -s -L https://deb.debian.org/debian/dists/oldstable/main | grep -q binary-"$debian_architecture" && sudo docker pull --platform linux/"$MATRIX_ARCHITECTURE" docker.io/"$arch_nodash"/debian:oldstable; then
             image=debian:oldstable
-          elif curl -s -L https://deb.debian.org/debian/dists/stable/main | grep -q binary-"$debian_architecture" && sudo docker pull --platform "linux/$MATRIX_ARCHITECTURE" docker.io/"$arch_nodash"/debian:stable; then
+          elif curl -s -L https://deb.debian.org/debian/dists/stable/main | grep -q binary-"$debian_architecture" && sudo docker pull --platform linux/"$MATRIX_ARCHITECTURE" docker.io/"$arch_nodash"/debian:stable; then
             image=debian:stable
-          elif curl -s -L https://deb.debian.org/debian/dists/testing/main | grep -q binary-"$debian_architecture" && sudo docker pull --platform "linux/$MATRIX_ARCHITECTURE" docker.io/"$arch_nodash"/debian:testing; then
+          elif curl -s -L https://deb.debian.org/debian/dists/testing/main | grep -q binary-"$debian_architecture" && sudo docker pull --platform linux/"$MATRIX_ARCHITECTURE" docker.io/"$arch_nodash"/debian:testing; then
             image=debian:testing
-          elif curl -s -L https://deb.debian.org/debian/dists/unstable/main | grep -q binary-"$debian_architecture" && sudo docker pull --platform "linux/$MATRIX_ARCHITECTURE" docker.io/"$arch_nodash"/debian:unstable; then
+          elif curl -s -L https://deb.debian.org/debian/dists/unstable/main | grep -q binary-"$debian_architecture" && sudo docker pull --platform linux/"$MATRIX_ARCHITECTURE" docker.io/"$arch_nodash"/debian:unstable; then
             image=debian:unstable
           else
             echo "no debian found supporting the architecture $MATRIX_ARCHITECTURE"
             exit 1
           fi
           echo 'cd src/usr/share/opentelemetry_shell/agent.instrumentation.http/ && apt-get update 1>&2 && yes | apt-get install build-essential 1>&2 && gcc -shared -fPIC -o libinjecthttpheader.so agent.injection.http_header.c -ldl 1>&2 && arch' \
-           | sudo docker run -i --rm --network host -v "$(pwd)"/src:/home/root/src -w /home/root --platform "linux/$MATRIX_ARCHITECTURE" docker.io/"$arch_nodash"/"$image" | xargs -0 -I {} echo 'architecture={}' >> "$GITHUB_OUTPUT"
+           | sudo docker run -i --rm --network host -v "$(pwd)"/src:/home/root/src -w /home/root --platform linux/"$MATRIX_ARCHITECTURE" docker.io/"$arch_nodash"/"$image" | xargs -0 -I {} echo 'architecture={}' >> "$GITHUB_OUTPUT"
       - run: |
           [ -r src/usr/share/opentelemetry_shell/agent.instrumentation.http/libinjecthttpheader.so ]
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -292,9 +292,9 @@ jobs:
       - run: |
           ! find src/usr/share/opentelemetry_shell/agent.instrumentation.python/venv -iname '*.so' | grep '.so$'
       - env:
-          PYTHON_VERSION: ${{ matrix.version }}
+          MATRIX_VERSION: ${{ matrix.version }}
         run: |
-          ! find -L src/usr/share/opentelemetry_shell/agent.instrumentation.python/venv/lib/python"$PYTHON_VERSION"/site-packages -type l -exec readlink -f '{}' ';' | while read -r file; do realpath "$file"; done | grep '^'"$(pwd)"/src/usr/share/opentelemetry_shell/agent.instrumentation.python/
+          ! find -L src/usr/share/opentelemetry_shell/agent.instrumentation.python/venv/lib/python"$MATRIX_VERSION"/site-packages -type l -exec readlink -f '{}' ';' | while read -r file; do realpath "$file"; done | grep '^'"$(pwd)"/src/usr/share/opentelemetry_shell/agent.instrumentation.python/
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: python_site_packages_${{ matrix.version }}_${{ inputs.ref }}
@@ -405,10 +405,10 @@ jobs:
           ' > manifest.txt
           jar cmf manifest.txt gradlehttppropagationagent.jar GradleHttpPropagationAgent*.class
       - env:
-          MIN_VERSION: ${{ steps.determine-minimum-version.outputs.version }}
+          DETERMINE_MINIMUM_VERSION: ${{ steps.determine-minimum-version.outputs.version }}
         run: |
           cd src/usr/share/opentelemetry_shell/agent.instrumentation.java
-          printf '%s\n' "$MIN_VERSION" > version
+          printf '%s\n' "$DETERMINE_MINIMUM_VERSION" > version
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: java_${{ inputs.ref }}
@@ -522,9 +522,9 @@ jobs:
       - run: cp -r meta/debian src/DEBIAN
       - run: sed -i "s/__VERSION__/$(cat VERSION)/g" src/DEBIAN/control
       - env:
-          PYTHON_VERSIONS: ${{ needs.list-python-versions.outputs.versions }}
+          LIST_PYTHON_VERSIONS: ${{ needs.list-python-versions.outputs.versions }}
         run: |
-          printf '%s' "$PYTHON_VERSIONS" | jq -r '.[]' | while read -r version; do
+          printf '%s' "$LIST_PYTHON_VERSIONS" | jq -r '.[]' | while read -r version; do
             cat src/DEBIAN/triggers | grep 'python3$' | sed "s~/python3~/python$version~g" >> src/DEBIAN/triggers
           done
       - run: |

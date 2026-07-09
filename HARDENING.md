@@ -10,97 +10,128 @@
 
 **Harden Agent Version:** `1`
 
-Action **plengauer--Thoth/v5.58.1** was hardened automatically. 11 finding(s) were identified and resolved across 3 iteration(s).
+Action **plengauer--Thoth/v5.58.1** was hardened automatically. 12 finding(s) were identified and resolved across 3 iteration(s).
 
 ## Findings Fixed
 
 ### script-injection (severity: high)
 
-Rule (a): Multiple ${{ ... }} expressions are directly interpolated inside run: shell command strings in the deploy composite action. Examples include: `if [ -r '${{ inputs.__repository_level_instrumentation_file_name_override }}' ]`, `echo '${{ inputs.action_repository }}'`, `if [ "${{ inputs.action_version }}" = same ]`, `cat "${{ steps.find-self.outputs.path }}"`, `sed -i 's~...~${{ steps.determine-repository.outputs.repository }}~g'`, `echo ${{ github.repository_owner }}`, `curl ... ${{ github.repository }}`, `git commit -m "${{ inputs.commit_message }}"`, `gh pr merge --squash --auto ${{ steps.open-pr.outputs.pull-request-number }}`. These allow injection of arbitrary shell commands via attacker-controlled inputs.
+Direct expression interpolation in run: blocks in actions/instrument/deploy/action.yml. Multiple steps interpolate ${{ inputs.* }}, ${{ github.* }}, and ${{ steps.*.outputs.* }} directly into shell commands. Examples: 'if [ -r '${{ inputs.__repository_level_instrumentation_file_name_override }}' ]' (Find self step), 'if [ "${{ inputs.action_version }}" = same ]' (Determine version step), 'sed -i 's~'"$repository"'~${{ steps.determine-repository.outputs.repository }}~g' (Canonicalize step), 'gh pr merge --squash --auto ${{ steps.open-pr.outputs.pull-request-number }}' (Enable auto-merge step). This violates rule (a): any ${{ ... }} expression directly inside a run: script is a script-injection finding.
 
 Locations:
 
-- `actions/instrument/deploy/action.yml:100`
-
-### github-env-injection (severity: high)
-
-Untrusted input values from inputs.* and github.* contexts are written directly to $GITHUB_OUTPUT without the required sanitization step (printf '%s' ... | tr -d '\n\r'). Examples: `echo path="${{ inputs.__repository_level_instrumentation_file_name_override }}" >> "$GITHUB_OUTPUT"`, `echo path="${{ github.workflow }}" >> "$GITHUB_OUTPUT"`, and `echo version='{}' >> "$GITHUB_OUTPUT"` where {} is substituted from inputs.action_version via xargs.
-
-Locations:
-
-- `actions/instrument/deploy/action.yml:100`
+- `actions/instrument/deploy/action.yml:57`
+- `actions/instrument/deploy/action.yml:68`
+- `actions/instrument/deploy/action.yml:75`
+- `actions/instrument/deploy/action.yml:82`
 
 ### script-injection (severity: high)
 
-Rule (a): ${{ ... }} expressions are directly interpolated inside run: shell command strings. Examples: `[ -z "$(git describe --tags --abbrev=0 ${{ github.sha }})" ]`, `cat '${{ github.event_path }}'`, `current_tag=$(git describe --tags --abbrev=0 ${{ matrix.ref }})`, `git format-patch -1 "${{ matrix.ref }}"`, `git cherry-pick -n "${{ matrix.ref }}"`, `echo commit_title="$(git log -1 --pretty=%s "${{ matrix.ref }}")"`, `gh pr merge --squash --auto ${{ steps.open-pr.outputs.pull-request-number }}`.
+Direct expression interpolation in run: blocks in .github/workflows/autobackport.yml. Examples: 'git describe --tags --abbrev=0 ${{ github.sha }}' (setup step), 'cat '${{ github.event_path }}'' (setup step), 'git describe --tags --abbrev=0 ${{ matrix.ref }}' (prepare_branch step), 'git format-patch -1 "${{ matrix.ref }}"' (apply patch step), 'git log -1 --pretty=%s "${{ matrix.ref }}"' (prepare_pr step), 'gh pr merge --squash --auto ${{ steps.open-pr.outputs.pull-request-number }}' (final step). Violates rule (a).
 
 Locations:
 
-- `.github/workflows/autobackport.yml:28`
+- `.github/workflows/autobackport.yml:29`
+- `.github/workflows/autobackport.yml:30`
+- `.github/workflows/autobackport.yml:60`
+- `.github/workflows/autobackport.yml:68`
+- `.github/workflows/autobackport.yml:76`
+- `.github/workflows/autobackport.yml:91`
 
 ### script-injection (severity: high)
 
-Rule (a): ${{ ... }} expressions are directly interpolated inside run: shell command strings. Examples: `debian_architecture="$(echo ${{ matrix.architecture }} | cut -d / -f 1 | sed 's/le$/el/g')"`, `sudo docker pull --platform linux/${{ matrix.architecture }}`, `echo "${{ steps.determine-minimum-version.outputs.version }}" > version`, `printf '%s' "${{ needs.list-python-versions.outputs.versions }}" | jq -r '.[]'`.
+Direct expression interpolation in run: blocks in .github/workflows/build.yml. The build-http job interpolates ${{ matrix.architecture }} directly into shell commands: 'debian_architecture="$(echo ${{ matrix.architecture }} | cut -d / -f 1 | sed 's/le$/el/g')"' and 'sudo docker pull --platform linux/${{ matrix.architecture }} docker.io/"$(echo ${{ matrix.architecture }} | tr -d /)"'. Violates rule (a).
 
 Locations:
 
-- `.github/workflows/build.yml:60`
+- `.github/workflows/build.yml:47`
 
 ### script-injection (severity: high)
 
-Rule (a): ${{ ... }} expressions are directly interpolated inside run: shell command strings. Examples: `cat '${{ github.event_path }}'`, `curl -s --fail -H "Authorization: Bearer ${{ github.token }}"`, `echo ${{ github.token }} | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin`, `version="${{ steps.version.outputs.version }}"`.
+Direct expression interpolation in run: blocks in .github/workflows/init_fork.yml. The init job interpolates ${{ secrets.ACTIONS_GITHUB_TOKEN }} directly into shell commands: 'curl --fail -H "Authorization: Bearer ${{ secrets.ACTIONS_GITHUB_TOKEN }}"'. Violates rule (a).
 
 Locations:
 
-- `.github/workflows/publish.yml:30`
+- `.github/workflows/init_fork.yml:22`
+- `.github/workflows/init_fork.yml:25`
 
 ### script-injection (severity: high)
 
-Rule (a): ${{ ... }} expressions are directly interpolated inside run: shell command strings. Examples: `bash -c 'cd tests && bash run_tests_containerized.sh "${{ matrix.image }}" "${{ matrix.update }}" "${{ matrix.shell }}"'`, `sudo docker run ... ${{ matrix.image }} -e <<EOF`, `[ ${{ matrix.shell }} = sh ] || sudo -E apt-get -y install ${{ matrix.shell }}`, `bash -c "cd tests && bash run_tests.sh ${{ matrix.shell }}"`, `curl ... --header "Authorization: Bearer ${{ github.token }}"`, `mv opentelemetry-shell_*_all.deb opentelemetry-shell_${{ matrix.version }}_all.deb`, `sudo apt-get install -y ./opentelemetry-shell_${{ matrix.version }}_all.deb`.
+Direct expression interpolation in run: blocks in .github/workflows/publish.yml. Examples: 'version="${{ steps.version.outputs.version }}"', 'echo ${{ github.token }} | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin', 'for tag_simple in ... "${{ matrix.ref }}"'. Also in the final run block: 'version="${{ steps.version.outputs.version }}"'. Violates rule (a).
 
 Locations:
 
-- `.github/workflows/test_shell.yml:270`
+- `.github/workflows/publish.yml:79`
+- `.github/workflows/publish.yml:83`
+- `.github/workflows/publish.yml:91`
 
 ### script-injection (severity: high)
 
-Rule (a): ${{ steps.open-pr.outputs.pull-request-number }} is directly interpolated inside a run: shell command string: `gh pr merge --squash --auto ${{ steps.open-pr.outputs.pull-request-number }}`.
+Direct expression interpolation in run: blocks in .github/workflows/refresh_demos.yml. Examples: 'curl --header "Authorization: Bearer ${{ github.token }}"', 'export GITHUB_TOKEN=${{ github.token }}', 'cd demos/${{ matrix.demo_directory }}', 'sed -i s/${{ github.token }}/***/g otlp.json'. Violates rule (a).
 
 Locations:
 
-- `.github/workflows/renovate.yml:120`
+- `.github/workflows/refresh_demos.yml:42`
+- `.github/workflows/refresh_demos.yml:57`
+- `.github/workflows/refresh_demos.yml:58`
+- `.github/workflows/refresh_demos.yml:97`
 
 ### script-injection (severity: high)
 
-Rule (a): ${{ steps.open-pr.outputs.pull-request-number }} is directly interpolated inside a run: shell command string: `gh pr merge --squash --auto ${{ steps.open-pr.outputs.pull-request-number }}`.
-
-Locations:
-
-- `.github/workflows/recompile_agentic_workflows.yml:55`
-
-### script-injection (severity: high)
-
-Rule (a): ${{ ... }} expressions are directly interpolated inside run: shell command strings. Examples: `curl --header "Authorization: Bearer ${{ github.token }}"`, `export GITHUB_TOKEN=${{ github.token }}`, `cd demos/${{ matrix.demo_directory }}`, `sed -i s/${{ github.token }}/***/g otlp.json`.
-
-Locations:
-
-- `.github/workflows/refresh_demos.yml:40`
-
-### script-injection (severity: high)
-
-Rule (a): ${{ secrets.ACTIONS_GITHUB_TOKEN }} is directly interpolated inside run: shell command strings: `[ -n "${{ secrets.ACTIONS_GITHUB_TOKEN }}" ]`, `curl --fail -H "Authorization: Bearer ${{ secrets.ACTIONS_GITHUB_TOKEN }}" ... | xargs -I '{}' curl --fail -H "Authorization: Bearer ${{ secrets.ACTIONS_GITHUB_TOKEN }}"`.
-
-Locations:
-
-- `.github/workflows/init_fork.yml:15`
-
-### script-injection (severity: high)
-
-Rule (a): ${{ ... }} expressions are directly interpolated inside run: shell command strings: `echo "deb [arch=all] https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }} stable main"`, `curl ... --header "Authorization: Bearer ${{ github.token }}"`.
+Direct expression interpolation in run: blocks in .github/workflows/test_package_repositories.yml. The test-apt job interpolates ${{ github.repository_owner }} and ${{ github.event.repository.name }} directly into a shell command: 'echo "deb [arch=all] https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }} stable main"'. Also interpolates ${{ github.token }} directly. Violates rule (a).
 
 Locations:
 
 - `.github/workflows/test_package_repositories.yml:18`
+- `.github/workflows/test_package_repositories.yml:25`
+
+### script-injection (severity: high)
+
+Direct expression interpolation in run: blocks in .github/workflows/test_shell.yml. Examples: 'bash -c 'cd tests && bash run_tests_containerized.sh "${{ matrix.image }}" "${{ matrix.update }}" "${{ matrix.shell }}"'' (linux-shell job), 'sudo docker run --rm --network=host -i --entrypoint=/bin/sh ${{ matrix.image }} -e <<EOF' (install-manual-os job), 'sudo apt-get install -y ./opentelemetry-shell_${{ matrix.version }}_all.deb' (performance job), 'wget --header "Authorization: Bearer ${{ github.token }}"' (upgrade job). Violates rule (a).
+
+Locations:
+
+- `.github/workflows/test_shell.yml:131`
+- `.github/workflows/test_shell.yml:118`
+- `.github/workflows/test_shell.yml:175`
+
+### script-injection (severity: high)
+
+Direct expression interpolation in run: blocks in .github/workflows/recompile_agentic_workflows.yml. The recompile job interpolates ${{ steps.open-pr.outputs.pull-request-number }} directly into a shell command: 'gh pr merge --squash --auto ${{ steps.open-pr.outputs.pull-request-number }}'. Violates rule (a).
+
+Locations:
+
+- `.github/workflows/recompile_agentic_workflows.yml:50`
+
+### script-injection (severity: high)
+
+Direct expression interpolation in run: blocks in .github/workflows/renovate.yml. Multiple jobs interpolate ${{ steps.open-pr.outputs.pull-request-number }} directly into shell commands: 'gh pr merge --squash --auto ${{ steps.open-pr.outputs.pull-request-number }}'. Violates rule (a).
+
+Locations:
+
+- `.github/workflows/renovate.yml:55`
+- `.github/workflows/renovate.yml:130`
+- `.github/workflows/renovate.yml:148`
+
+### github-env-injection (severity: high)
+
+In actions/instrument/deploy/action.yml, the 'Find self' step writes ${{ inputs.__repository_level_instrumentation_file_name_override }} and ${{ github.workflow }} directly to $GITHUB_OUTPUT without sanitization: 'echo path="${{ inputs.__repository_level_instrumentation_file_name_override }}" >> "$GITHUB_OUTPUT"' and 'echo path="${{ github.workflow }}" >> "$GITHUB_OUTPUT"'. The 'Determine version' step also writes inputs.action_version-derived values to $GITHUB_OUTPUT without sanitization. No printf '%s' ... | tr -d '\n\r' sanitization is applied.
+
+Locations:
+
+- `actions/instrument/deploy/action.yml:58`
+- `actions/instrument/deploy/action.yml:60`
+- `actions/instrument/deploy/action.yml:75`
+
+### github-env-injection (severity: high)
+
+In .github/workflows/autobackport.yml, the 'prepare_pr' step writes values derived from ${{ matrix.ref }} to $GITHUB_OUTPUT without sanitization: 'echo commit_title="$(git log -1 --pretty=%s "${{ matrix.ref }}")" >> "$GITHUB_OUTPUT"', 'echo author_name="$(git log -1 --pretty=%an "${{ matrix.ref }}")" >> "$GITHUB_OUTPUT"', 'echo author_email="$(git log -1 --pretty=%ae "${{ matrix.ref }}")" >> "$GITHUB_OUTPUT"'. No sanitization is applied before writing.
+
+Locations:
+
+- `.github/workflows/autobackport.yml:76`
+- `.github/workflows/autobackport.yml:77`
+- `.github/workflows/autobackport.yml:78`
 
 ## Iteration Notes
 
@@ -110,27 +141,19 @@ Locations:
 
 **Notes:**
 
-Fixed all script-injection and github-env-injection findings across 8 files:
+Fixed all script-injection and github-env-injection findings by moving ${{ }} expressions from run: blocks into step env: blocks and referencing them as plain environment variables in shell scripts.
 
-1. actions/instrument/deploy/action.yml: Moved all ${{ inputs.* }}, ${{ github.* }}, and ${{ steps.*.outputs.* }} expressions from run: shell blocks into env: blocks. Fixed: Find self step (with github-env-injection sanitization using tr -d '\n\r'), Determine repository, Determine version, Canonicalize, Find workflow/check-suite/repository-level observability steps, Deploy workflow/check-suite/repository-level instrumentation and startup optimization steps, Update workflow-level triggers, Deploy Copilot Setup, Deploy job-level instrumentation, Configure secret redaction, Modify permissions, Restore blank lines, Push (git commit -m), Enable auto-merge (gh pr merge).
-
-2. .github/workflows/autobackport.yml: Fixed github.sha and github.event_path in dynamic step; matrix.ref in prepare_branch, format-patch/cherry-pick, and prepare_pr steps; steps.open-pr.outputs.pull-request-number in gh pr merge.
-
-3. .github/workflows/build.yml: Fixed matrix.architecture in build-http step (all docker pull/run references); steps.determine-minimum-version.outputs.version in echo to file; needs.list-python-versions.outputs.versions in printf.
-
-4. .github/workflows/publish.yml: Fixed github.event_path and github.token in dynamic step; steps.version.outputs.version, github.token, github.actor, and matrix.ref in docker login/push step.
-
-5. .github/workflows/test_shell.yml: Fixed github.token and matrix.version in upgrade step; matrix.image in system-upgrade and install-manual-os steps; matrix.image in dependency step; matrix.image/update/shell in linux-shell step; matrix.shell in windows-shell step; github.token and matrix.version in performance steps.
-
-6. .github/workflows/renovate.yml: Fixed all three gh pr merge --squash --auto ${{ steps.open-pr.outputs.pull-request-number }} occurrences.
-
-7. .github/workflows/recompile_agentic_workflows.yml: Fixed gh pr merge --squash --auto ${{ steps.open-pr.outputs.pull-request-number }}.
-
-8. .github/workflows/refresh_demos.yml: Fixed github.token in curl/wget, matrix.demo_directory in cd commands, and github.token in sed command.
-
-9. .github/workflows/init_fork.yml: Fixed secrets.ACTIONS_GITHUB_TOKEN in both run: blocks.
-
-10. .github/workflows/test_package_repositories.yml: Fixed github.repository_owner and github.event.repository.name in echo/tee command; github.token in curl command.
+Files modified:
+1. actions/instrument/deploy/action.yml: Fixed Find self step (inputs.__repository_level_instrumentation_file_name_override, github.workflow), Determine repository step (steps.find-self.outputs.path, inputs.action_repository), Determine version step (inputs.action_version, steps.find-self.outputs.path, steps.determine-repository.outputs.repository), Canonicalize step (steps.determine-repository.outputs.repository), Enable auto-merge step (steps.open-pr.outputs.pull-request-number). Added tr -d newlines sanitization for GITHUB_OUTPUT writes.
+2. .github/workflows/autobackport.yml: Fixed setup dynamic step (github.sha, github.event_path), prepare_branch step (matrix.ref), apply patch step (matrix.ref), prepare_pr step (matrix.ref with GITHUB_OUTPUT sanitization), final merge step (steps.open-pr.outputs.pull-request-number).
+3. .github/workflows/build.yml: Fixed build-http build step (matrix.architecture).
+4. .github/workflows/init_fork.yml: Fixed curl step (secrets.ACTIONS_GITHUB_TOKEN).
+5. .github/workflows/publish.yml: Fixed setup dynamic step (github.event_path, github.token), publish docker step (steps.version.outputs.version, github.token, github.actor, matrix.ref), final tag step (steps.version.outputs.version).
+6. .github/workflows/refresh_demos.yml: Fixed download step (github.token), demo run step (github.token, matrix.demo_directory, sed token replacement), second demo step (matrix.demo_directory), git diff step (matrix.demo_directory).
+7. .github/workflows/test_package_repositories.yml: Fixed apt sources step (github.repository_owner, github.event.repository.name), curl step (github.token).
+8. .github/workflows/test_shell.yml: Fixed system-upgrade step (matrix.image), dependency step (matrix.image), install-manual-os step (matrix.image), linux-shell step (matrix.image, matrix.update, matrix.shell), windows-shell step (matrix.shell), upgrade step (github.token, matrix.version), performance step (github.token, matrix.version).
+9. .github/workflows/recompile_agentic_workflows.yml: Fixed gh pr merge step (steps.open-pr.outputs.pull-request-number).
+10. .github/workflows/renovate.yml: Fixed three gh pr merge steps (steps.open-pr.outputs.pull-request-number) in renovate-package-dependency-python, renovate-test-images, and renovate-license jobs.
 
 ### Iteration 2
 
@@ -138,26 +161,13 @@ Fixed all script-injection and github-env-injection findings across 8 files:
 
 **Notes:**
 
-Fixed all script injection and github-env-injection findings:
-1. build.yml: Moved ${{ matrix.version }} to PYTHON_VERSION env var in the run step that checks python site-packages symlinks.
-2. publish.yml: Moved ${{ steps.version.outputs.version }} to VERSION env var in the git tagging run step.
-3. test_shell.yml: Moved ${{ secrets.DOCKERHUB_USERNAME }} and ${{ secrets.DOCKERHUB_TOKEN }} to DOCKERHUB_USERNAME and DOCKERHUB_TOKEN env vars in the docker login step.
-4. test_github.yml (job-io-1): Moved ${{ steps.my-step.outputs.foo }} to MY_STEP_FOO env var.
-5. test_github.yml (job-io-2): Moved ${{ needs.job-io-1.outputs.foo }} to JOB_IO_1_FOO env var.
-6. test_github.yml (workflow-smoke): Moved ${{ secrets.GITHUB_TOKEN }} to GITHUB_TOKEN_VALUE env var in curl commands; moved workflow_run outputs to WORKFLOW_RUN_ID and WORKFLOW_RUN_ATTEMPT env vars in assertions.
-7. test_github.yml (workflow job): Same fixes as workflow-smoke, plus moved gh_artifact_download call to use env vars.
-8. test_github.yml (checksuite-smoke): Moved ${{ secrets.GITHUB_TOKEN }} to GITHUB_TOKEN_VALUE env var; moved ${{ steps.check_suite.outputs.id }} to CHECK_SUITE_ID env var.
-9. test_github.yml (deploy job config step): Moved TEST_GITHUB_TOKEN, REPOSITORY_TEMPLATE, github.workflow, github.ref_name to env vars; also fixed github-env-injection by using printf '%s' ... | tr -d '\n\r' to sanitize the repository output value before writing to GITHUB_OUTPUT.
-10. test_github.yml (deploy job): Fixed all remaining injections (DELETE curl, POST curl with matrix.private, git config, gh secret set + wget + yq commands, case statement with matrix.secret_redaction_strategy, final DELETE curl) by moving all ${{ }} expressions to env: blocks.
+Fixed all script injection findings by moving ${{ }} expressions from run: blocks to env: blocks in: (1) actions/instrument/deploy/action.yml - moved inputs.workflows_directory, inputs.workflow_level_instrumentation_workflow_name, steps.determine-repository.outputs.repository, steps.determine-instrumentation-version.outputs.version, inputs.workflow_level_instrumentation_file_name, steps.find-self.outputs.path, steps.find-workflow-level-instrumentation.outputs.path, github.repository_owner, inputs.github_token, inputs.workflow_level_instrumentation_exclude, steps.find-check-suite-level-instrumentation.outputs.path, inputs.check_suite_instrumentation_file_name, steps.find-repository-level-instrumentation.outputs.path, inputs.repository_level_instrumentation_file_name, github.repository, inputs.job_level_instrumentation_exclude, inputs.workflow_level_instrumentation_file_name, inputs.job_level_instrumentation_secret_redaction_strategy, inputs.commit_message to env: blocks; (2) .github/workflows/init_fork.yml - moved secrets.ACTIONS_GITHUB_TOKEN to env: block; (3) .github/workflows/build.yml - moved matrix.version, steps.determine-minimum-version.outputs.version, needs.list-python-versions.outputs.versions to env: blocks; (4) .github/workflows/test_github.yml - moved secrets.TEST_GITHUB_TOKEN, env.REPOSITORY_TEMPLATE, github.workflow, github.ref_name, github.repository, github.sha, matrix.secret_redaction_strategy, steps.config.outputs.user, steps.config.outputs.repository, inputs.ref to env: blocks; (5) Fixed github-env-injection by sanitizing the repository output with tr -d '\n\r' before writing to GITHUB_OUTPUT.
 
 ### Iteration 3
 
-**Fixes applied:** github-env-injection
+**Fixes applied:** script-injection, github-env-injection
 
 **Notes:**
 
-Fixed two github-env-injection findings in hardened/action/actions/instrument/deploy/action.yml:
-1. 'Determine repository' step (line ~155): Replaced `xargs -I '{}' echo repository='{}' >> "$GITHUB_OUTPUT"` with a while-read loop that sanitizes each line using `printf '%s' "$line" | tr -d '\n\r'` before writing `repository=$safe` to GITHUB_OUTPUT.
-2. 'Determine version' step (line ~170): Same fix applied - replaced `xargs -I '{}' echo version='{}' >> "$GITHUB_OUTPUT"` with a while-read loop that sanitizes each line before writing `version=$safe` to GITHUB_OUTPUT.
-Both fixes prevent caller-controlled newlines in ACTION_REPOSITORY and ACTION_VERSION inputs from injecting unexpected key=value pairs into GITHUB_OUTPUT.
+Fixed all script injection issues in test_github.yml (8 locations) and test_shell.yml (1 location) by moving ${{ ... }} expressions out of run: shell blocks into env: blocks. Fixed github-env-injection in actions/instrument/deploy/action.yml by adding `| tr -d '\n\r'` before writing the repository value to GITHUB_OUTPUT to strip attacker-controlled newlines.
 

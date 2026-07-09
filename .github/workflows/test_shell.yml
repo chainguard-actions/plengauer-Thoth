@@ -374,6 +374,9 @@ jobs:
         with:
           name: packages.deb.${{ inputs.ref }}
       - shell: wsl-bash {0}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MATRIX_SHELL: ${{ matrix.shell }}
         run: |
           sudo apt-get update
           sudo -E apt-get -y install ./opentelemetry-shell_*_"$(arch | sed s/x86_64/amd64/g | sed s/aarch64/arm64/g | sed 's/le$/el/g')".deb dos2unix jq psmisc wget curl time sudo
@@ -384,9 +387,6 @@ jobs:
           dos2unix tests/*.sh tests/*/*
           bash -c "cd tests && bash run_tests.sh $MATRIX_SHELL"
           sudo apt-get -y remove opentelemetry-shell
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MATRIX_SHELL: ${{ matrix.shell }}
   prepare-performance:
     needs: smoke
     runs-on: ubuntu-slim
@@ -430,21 +430,21 @@ jobs:
         run: |
           url="$(curl --no-progress-meter --fail --header "Authorization: Bearer $GITHUB_TOKEN_VAL" https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases/tags/"$MATRIX_VERSION" | jq '.assets[] | select(.name | endswith("_all.deb")) | .url' -r)"
           if [ -z "$url" ]; then url="$(curl --no-progress-meter --fail --header "Authorization: Bearer $GITHUB_TOKEN_VAL" https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases/tags/"$MATRIX_VERSION" | jq '.assets[] | select(.name | endswith(".deb")) | .url' -r)"; fi
-          wget --header "Authorization: Bearer $GITHUB_TOKEN_VAL" --header "Accept: application/octet-stream" -O "opentelemetry-shell_${MATRIX_VERSION}_all.deb" "$url"
+          wget --header "Authorization: Bearer $GITHUB_TOKEN_VAL" --header "Accept: application/octet-stream" -O opentelemetry-shell_"$MATRIX_VERSION"_all.deb "$url"
       - if: matrix.version == '~local'
         env:
           MATRIX_VERSION: ${{ matrix.version }}
         run: |
-          mv opentelemetry-shell_*_all.deb "opentelemetry-shell_${MATRIX_VERSION}_all.deb"
+          mv opentelemetry-shell_*_all.deb opentelemetry-shell_"$MATRIX_VERSION"_all.deb
       - env:
           MATRIX_VERSION: ${{ matrix.version }}
-        run: sudo apt-get install -y "./opentelemetry-shell_${MATRIX_VERSION}_all.deb"
+        run: sudo apt-get install -y ./opentelemetry-shell_"$MATRIX_VERSION"_all.deb
       - env:
           MATRIX_VERSION: ${{ matrix.version }}
         run: |
           export OTEL_SHELL_SDK_OUTPUT_REDIRECT=/dev/null
-          command time -f '%U' bash -c '. /usr/bin/opentelemetry_shell.sh' 2>> "performance.${MATRIX_VERSION}.coldstart.list"
-          for i in $(seq 1 100); do command time -f '%U' bash -c '. /usr/bin/opentelemetry_shell.sh' 2>> "performance.${MATRIX_VERSION}.warmstart.list"; done
+          command time -f '%U' bash -c '. /usr/bin/opentelemetry_shell.sh' 2>> performance."$MATRIX_VERSION".coldstart.list
+          for i in $(seq 1 100); do command time -f '%U' bash -c '. /usr/bin/opentelemetry_shell.sh' 2>> performance."$MATRIX_VERSION".warmstart.list; done
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: performance.${{ matrix.version }}.coldstart.list

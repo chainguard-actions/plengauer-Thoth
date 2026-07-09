@@ -101,19 +101,19 @@ runs:
       id: find-self
       shell: bash
       env:
-        FILE_NAME_OVERRIDE: ${{ inputs.__repository_level_instrumentation_file_name_override }}
+        INPUT_FILE_NAME_OVERRIDE: ${{ inputs.__repository_level_instrumentation_file_name_override }}
         GITHUB_WORKFLOW_VAL: ${{ github.workflow }}
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
       run: |
-        if [ -r "$FILE_NAME_OVERRIDE" ]; then
-          safe="$(printf '%s' "$FILE_NAME_OVERRIDE" | tr -d '\n\r')"
-          echo "path=$safe" >> "$GITHUB_OUTPUT"
+        if [ -r "$INPUT_FILE_NAME_OVERRIDE" ]; then
+          safe_path="$(printf '%s' "$INPUT_FILE_NAME_OVERRIDE" | tr -d '\n\r')"
+          echo "path=$safe_path" >> "$GITHUB_OUTPUT"
         elif [ -r "$GITHUB_WORKFLOW_VAL" ]; then
-          safe="$(printf '%s' "$GITHUB_WORKFLOW_VAL" | tr -d '\n\r')"
-          echo "path=$safe" >> "$GITHUB_OUTPUT"
+          safe_path="$(printf '%s' "$GITHUB_WORKFLOW_VAL" | tr -d '\n\r')"
+          echo "path=$safe_path" >> "$GITHUB_OUTPUT"
         else
-          (ls "$WORKFLOWS_DIRECTORY"/*.yaml "$WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
-            [ "$(cat "$workflow_file" | yq .name)" = "$GITHUB_WORKFLOW_VAL" ] && safe="$(printf '%s' "$workflow_file" | tr -d '\n\r')" && echo "path=$safe" >> "$GITHUB_OUTPUT" && break || true
+          (ls "$INPUT_WORKFLOWS_DIRECTORY"/*.yaml "$INPUT_WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
+            [ "$(cat "$workflow_file" | yq .name)" = "$GITHUB_WORKFLOW_VAL" ] && safe_path="$(printf '%s' "$workflow_file" | tr -d '\n\r')" && echo "path=$safe_path" >> "$GITHUB_OUTPUT" && break || true
           done
         fi
     - name: "Determine repository"
@@ -121,13 +121,13 @@ runs:
       env:
         GITHUB_ACTION_REPOSITORY: ${{ github.action_repository }}
         FIND_SELF_PATH: ${{ steps.find-self.outputs.path }}
-        ACTION_REPOSITORY: ${{ inputs.action_repository }}
+        INPUT_ACTION_REPOSITORY: ${{ inputs.action_repository }}
       shell: bash
       run: |
         uses="$(cat "$FIND_SELF_PATH" | yq '.jobs[].steps[] | select(.uses == "*/actions/instrument/deploy*") | .uses' -r | head -n 1)"
         self="${uses%%/actions/instrument/deploy*}"
-        if [ -n "$ACTION_REPOSITORY" ]; then
-          echo "$ACTION_REPOSITORY"
+        if [ -n "$INPUT_ACTION_REPOSITORY" ]; then
+          printf '%s' "$INPUT_ACTION_REPOSITORY"
         elif [ -n "${GITHUB_ACTION_REPOSITORY:-}" ] && [ "${GITHUB_ACTION_REPOSITORY%/*}" != plengauer ]; then
           echo "$GITHUB_ACTION_REPOSITORY"
         elif [ "${self%/*}" != plengauer ]; then
@@ -137,62 +137,56 @@ runs:
         else
           echo "::notice::On private GitHub servers, action runners are not following redirects." >&2
           echo plengauer/Thoth
-        fi | while IFS= read -r line; do
-          safe="$(printf '%s' "$line" | tr -d '\n\r')"
-          echo "repository=$safe" >> "$GITHUB_OUTPUT"
-        done
+        fi | tr -d '\n\r' | xargs -I '{}' echo repository='{}' >> "$GITHUB_OUTPUT"
     - name: "Determine version"
       id: determine-instrumentation-version
       shell: bash
       env:
-        ACTION_VERSION: ${{ inputs.action_version }}
+        INPUT_ACTION_VERSION: ${{ inputs.action_version }}
         FIND_SELF_PATH: ${{ steps.find-self.outputs.path }}
         DETERMINE_REPOSITORY: ${{ steps.determine-repository.outputs.repository }}
       run: |
-        if [ "$ACTION_VERSION" = same ]; then
-          cat "$FIND_SELF_PATH" | yq -r ".jobs[].steps[] | select(.uses == \"$DETERMINE_REPOSITORY/actions/instrument/deploy*\") | .uses" | cut -d @ -f 2
+        if [ "$INPUT_ACTION_VERSION" = same ]; then
+          cat "$FIND_SELF_PATH" | yq -r '.jobs[].steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/deploy*") | .uses' | cut -d @ -f 2
         else
-          echo "$ACTION_VERSION"
-        fi | while IFS= read -r line; do
-          safe="$(printf '%s' "$line" | tr -d '\n\r')"
-          echo "version=$safe" >> "$GITHUB_OUTPUT"
-        done
+          printf '%s' "$INPUT_ACTION_VERSION"
+        fi | tr -d '\n\r' | xargs -I '{}' echo version='{}' >> "$GITHUB_OUTPUT"
     - name: Canonicalize
       shell: bash
       env:
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
         DETERMINE_REPOSITORY: ${{ steps.determine-repository.outputs.repository }}
       run: |
-        (ls "$WORKFLOWS_DIRECTORY"/*.yaml "$WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
+        (ls "$INPUT_WORKFLOWS_DIRECTORY"/*.yaml "$INPUT_WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
           for repository in plengauer/opentelemetry-github plengauer/opentelemetry-bash plengauer/opentelemetry-shell plengauer/opentelemetry-thoth plengauer/thoth plengauer/Thoth; do
-            sed -i "s~${repository}~${DETERMINE_REPOSITORY}~g" "$workflow_file"
+            sed -i 's~'"$repository"'~'"$DETERMINE_REPOSITORY"'~g' "$workflow_file"
           done
         done
     - name: "Find workflow-level observability"
       id: find-workflow-level-instrumentation
       shell: bash
       env:
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
       run: |
-        (ls "$WORKFLOWS_DIRECTORY"/*.yaml "$WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
+        (ls "$INPUT_WORKFLOWS_DIRECTORY"/*.yaml "$INPUT_WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
           cat "$workflow_file" | yq .on.workflow_run.workflows 2> /dev/null | grep -qv '^null$' && cat "$workflow_file" | yq .jobs.*.steps[].uses | grep -q /actions/instrument/workflow && echo path="$workflow_file" >> "$GITHUB_OUTPUT" && break || true
         done
     - name: "Find check-suite-level observability"
       id: find-check-suite-level-instrumentation
       shell: bash
       env:
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
       run: |
-        (ls "$WORKFLOWS_DIRECTORY"/*.yaml "$WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
+        (ls "$INPUT_WORKFLOWS_DIRECTORY"/*.yaml "$INPUT_WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
           cat "$workflow_file" | yq .on.check_suite 2> /dev/null | grep -qv '^null$' && cat "$workflow_file" | yq .jobs.*.steps[].uses | grep -q /actions/instrument/checksuite && echo path="$workflow_file" >> "$GITHUB_OUTPUT" && break || true
         done
     - name: "Find repository-level observability"
       id: find-repository-level-instrumentation
       shell: bash
       env:
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
       run: |
-        (ls "$WORKFLOWS_DIRECTORY"/*.yaml "$WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
+        (ls "$INPUT_WORKFLOWS_DIRECTORY"/*.yaml "$INPUT_WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
           cat "$workflow_file" | yq .jobs.*.steps[].uses | grep -q /actions/instrument/repository && echo path="$workflow_file" >> "$GITHUB_OUTPUT" && break || true
         done
   
@@ -200,14 +194,14 @@ runs:
       if: ${{ inputs.workflow_level_instrumentation == 'true' && steps.find-workflow-level-instrumentation.outputs.path == null }}
       shell: bash
       env:
-        WORKFLOW_NAME: ${{ inputs.workflow_level_instrumentation_workflow_name }}
+        INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_WORKFLOW_NAME: ${{ inputs.workflow_level_instrumentation_workflow_name }}
         DETERMINE_REPOSITORY: ${{ steps.determine-repository.outputs.repository }}
-        INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
-        WORKFLOW_FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
+        DETERMINE_INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
         FIND_SELF_PATH: ${{ steps.find-self.outputs.path }}
       run: |
-        echo "name: $WORKFLOW_NAME
+        echo 'name: '"$INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_WORKFLOW_NAME"'
         on:
           workflow_run:
             workflows: []
@@ -217,30 +211,30 @@ runs:
           export:
             runs-on: ubuntu-latest
             steps:
-              - uses: $DETERMINE_REPOSITORY/actions/instrument/workflow@$INSTRUMENTATION_VERSION
-        " > "$WORKFLOWS_DIRECTORY/$WORKFLOW_FILE_NAME"
-        cat "$FIND_SELF_PATH" | yq ".jobs[].steps[] | select(.uses == \"$DETERMINE_REPOSITORY/actions/instrument/deploy*\") | .env | keys[]" | grep '^OTEL_' | while read -r key; do
-          value="$(cat "$FIND_SELF_PATH" | yq ".jobs[].steps[] | select(.uses == \"$DETERMINE_REPOSITORY/actions/instrument/deploy*\") | .env.$key")"
-          yq -i '.jobs[].steps[0].env.'"$key"' = "'"$value"'"' "$WORKFLOWS_DIRECTORY/$WORKFLOW_FILE_NAME"
+              - uses: '"$DETERMINE_REPOSITORY"'/actions/instrument/workflow@'"$DETERMINE_INSTRUMENTATION_VERSION"'
+        ' > "$INPUT_WORKFLOWS_DIRECTORY/$INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_FILE_NAME"
+        cat "$FIND_SELF_PATH" | yq '.jobs[].steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/deploy*") | .env | keys[]' | grep '^OTEL_' | while read -r key; do
+          value="$(cat "$FIND_SELF_PATH" | yq '.jobs[].steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/deploy*") | .env.'"$key")"
+          yq -i '.jobs[].steps[0].env.'"$key"' = "'"$value"'"' "$INPUT_WORKFLOWS_DIRECTORY/$INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_FILE_NAME"
         done
     - name: "Deploy workflow-level startup optimization"
       if: ${{ inputs.workflow_level_instrumentation == 'true' && inputs.workflow_level_instrumentation_use_container == 'true' }}
       shell: bash
       env:
-        FIND_WORKFLOW_LEVEL_PATH: ${{ steps.find-workflow-level-instrumentation.outputs.path }}
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
-        WORKFLOW_FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
-        INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
-        REPO_OWNER: ${{ github.repository_owner }}
-        GITHUB_TOKEN_VAL: ${{ inputs.github_token }}
+        FIND_WORKFLOW_LEVEL_INSTRUMENTATION_PATH: ${{ steps.find-workflow-level-instrumentation.outputs.path }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
+        DETERMINE_INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
+        GITHUB_REPOSITORY_OWNER_VAL: ${{ github.repository_owner }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        if [ -w "$FIND_WORKFLOW_LEVEL_PATH" ]; then path="$FIND_WORKFLOW_LEVEL_PATH"; else path="$WORKFLOWS_DIRECTORY/$WORKFLOW_FILE_NAME"; fi
+        if [ -w "$FIND_WORKFLOW_LEVEL_INSTRUMENTATION_PATH" ]; then path="$FIND_WORKFLOW_LEVEL_INSTRUMENTATION_PATH"; else path="$INPUT_WORKFLOWS_DIRECTORY/$INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_FILE_NAME"; fi
         if cat "$path" | yq '.jobs.export.container' | grep -q '^null$'; then
           name=opentelemetry-github-workflow-instrumentation-runner
-          version="$INSTRUMENTATION_VERSION"
+          version="$DETERMINE_INSTRUMENTATION_VERSION"
           [ "$version" != main ] || exit 0
-          image=ghcr.io/"$REPO_OWNER"/"$name":"$version"
-          if curl -s --fail --retry 8 --header "Authorization: Bearer $GITHUB_TOKEN_VAL" "${GITHUB_API_URL:-https://api.github.com}"/users/"$REPO_OWNER"/packages/container/"$name"/versions | jq .[].metadata.container.tags[] -r | grep -qE '^'"$version"'$' \
+          image=ghcr.io/"$GITHUB_REPOSITORY_OWNER_VAL"/"$name":"$version"
+          if curl -s --fail --retry 8 --header "Authorization: Bearer $INPUT_GITHUB_TOKEN" "${GITHUB_API_URL:-https://api.github.com}"/users/"$GITHUB_REPOSITORY_OWNER_VAL"/packages/container/"$name"/versions | jq .[].metadata.container.tags[] -r | grep -qE '^'"$version"'$' \
             || (type docker 1> /dev/null 2> /dev/null && sudo docker pull "$image"); then
             yq -i ".jobs.export.container = \"$image\"" "$path" && exit 0
           fi
@@ -250,21 +244,21 @@ runs:
       if: ${{ inputs.workflow_level_instrumentation == 'true' }}
       shell: bash
       env:
-        FIND_WORKFLOW_LEVEL_PATH: ${{ steps.find-workflow-level-instrumentation.outputs.path }}
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
-        WORKFLOW_FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
-        WORKFLOW_LEVEL_EXCLUDE: ${{ inputs.workflow_level_instrumentation_exclude }}
-        FIND_CHECK_SUITE_PATH: ${{ steps.find-check-suite-level-instrumentation.outputs.path }}
-        CHECK_SUITE_FILE_NAME: ${{ inputs.check_suite_instrumentation_file_name }}
-        FIND_REPOSITORY_PATH: ${{ steps.find-repository-level-instrumentation.outputs.path }}
-        REPOSITORY_FILE_NAME: ${{ inputs.repository_level_instrumentation_file_name }}
-        GITHUB_TOKEN_VAL: ${{ inputs.github_token }}
+        FIND_WORKFLOW_LEVEL_INSTRUMENTATION_PATH: ${{ steps.find-workflow-level-instrumentation.outputs.path }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
+        INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_EXCLUDE: ${{ inputs.workflow_level_instrumentation_exclude }}
+        FIND_CHECK_SUITE_LEVEL_INSTRUMENTATION_PATH: ${{ steps.find-check-suite-level-instrumentation.outputs.path }}
+        INPUT_CHECK_SUITE_INSTRUMENTATION_FILE_NAME: ${{ inputs.check_suite_instrumentation_file_name }}
+        FIND_REPOSITORY_LEVEL_INSTRUMENTATION_PATH: ${{ steps.find-repository-level-instrumentation.outputs.path }}
+        INPUT_REPOSITORY_LEVEL_INSTRUMENTATION_FILE_NAME: ${{ inputs.repository_level_instrumentation_file_name }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
         GITHUB_REPOSITORY_VAL: ${{ github.repository }}
       run: |
-        if [ -w "$FIND_WORKFLOW_LEVEL_PATH" ]; then path="$FIND_WORKFLOW_LEVEL_PATH"; else path="$WORKFLOWS_DIRECTORY/$WORKFLOW_FILE_NAME"; fi
+        if [ -w "$FIND_WORKFLOW_LEVEL_INSTRUMENTATION_PATH" ]; then path="$FIND_WORKFLOW_LEVEL_INSTRUMENTATION_PATH"; else path="$INPUT_WORKFLOWS_DIRECTORY/$INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_FILE_NAME"; fi
         names_file="$(mktemp)"
         {
-          (ls "$WORKFLOWS_DIRECTORY"/*.yaml "$WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
+          (ls "$INPUT_WORKFLOWS_DIRECTORY"/*.yaml "$INPUT_WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
             name="$(cat "$workflow_file" | yq .name || true)"
             if [ "$name" = "null" ] || [ -z "$name" ]; then
               echo "$workflow_file"
@@ -272,11 +266,11 @@ runs:
               echo "$name"
             fi
           done \
-            | ([ -n "$WORKFLOW_LEVEL_EXCLUDE" ] && grep -qvF "$(echo "$WORKFLOW_LEVEL_EXCLUDE" | tr ',' '\n' | tr ':' '\n' | tr ';' '\n')" || cat) \
-            | grep -vF "$([ -r "$FIND_WORKFLOW_LEVEL_PATH" ] && cat "$FIND_WORKFLOW_LEVEL_PATH" | yq .name || cat "$WORKFLOWS_DIRECTORY/$WORKFLOW_FILE_NAME" | yq .name)" \
-            | grep -vF "$([ -r "$FIND_CHECK_SUITE_PATH" ] && cat "$FIND_CHECK_SUITE_PATH" | yq .name || cat "$WORKFLOWS_DIRECTORY/$CHECK_SUITE_FILE_NAME" | yq .name)" \
-            | grep -vF "$([ -r "$FIND_REPOSITORY_PATH" ] && cat "$FIND_REPOSITORY_PATH" | yq .name || cat "$WORKFLOWS_DIRECTORY/$REPOSITORY_FILE_NAME" | yq .name)"
-          seq 1 10 | xargs -I '{}' curl -s --fail --retry 8 --header "Authorization: Bearer $GITHUB_TOKEN_VAL" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY_VAL"/actions/workflows'?per_page=100&page={}' | jq '.workflows[] | select(.path | startswith("dynamic/")) | .name' -r
+            | ([ -n "$INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_EXCLUDE" ] && grep -qvF "$(echo "$INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_EXCLUDE" | tr ',' '\n' | tr ':' '\n' | tr ';' '\n')" || cat) \
+            | grep -vF "$([ -r "$FIND_WORKFLOW_LEVEL_INSTRUMENTATION_PATH" ] && cat "$FIND_WORKFLOW_LEVEL_INSTRUMENTATION_PATH" | yq .name || cat "$INPUT_WORKFLOWS_DIRECTORY/$INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_FILE_NAME" | yq .name)" \
+            | grep -vF "$([ -r "$FIND_CHECK_SUITE_LEVEL_INSTRUMENTATION_PATH" ] && cat "$FIND_CHECK_SUITE_LEVEL_INSTRUMENTATION_PATH" | yq .name || cat "$INPUT_WORKFLOWS_DIRECTORY/$INPUT_CHECK_SUITE_INSTRUMENTATION_FILE_NAME" | yq .name)" \
+            | grep -vF "$([ -r "$FIND_REPOSITORY_LEVEL_INSTRUMENTATION_PATH" ] && cat "$FIND_REPOSITORY_LEVEL_INSTRUMENTATION_PATH" | yq .name || cat "$INPUT_WORKFLOWS_DIRECTORY/$INPUT_REPOSITORY_LEVEL_INSTRUMENTATION_FILE_NAME" | yq .name)"
+          seq 1 10 | xargs -I '{}' curl -s --fail --retry 8 --header "Authorization: Bearer $INPUT_GITHUB_TOKEN" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY_VAL"/actions/workflows'?per_page=100&page={}' | jq '.workflows[] | select(.path | startswith("dynamic/")) | .name' -r
           echo Copilot # this one should be prefilled because it's very common and new
           echo Copilot code review # this one should be prefilled because it's very common and new
           echo Copilot cloud agent # this one should be prefilled because it needs deferred export
@@ -294,49 +288,49 @@ runs:
       if: ${{ inputs.check_suite_level_instrumentation == 'true' && steps.find-check-suite-level-instrumentation.outputs.path == null }}
       shell: bash
       env:
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
-        CHECK_SUITE_FILE_NAME: ${{ inputs.check_suite_instrumentation_file_name }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_CHECK_SUITE_INSTRUMENTATION_FILE_NAME: ${{ inputs.check_suite_instrumentation_file_name }}
         DETERMINE_REPOSITORY: ${{ steps.determine-repository.outputs.repository }}
-        INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
+        DETERMINE_INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
         FIND_SELF_PATH: ${{ steps.find-self.outputs.path }}
       run: |
-        path="$WORKFLOWS_DIRECTORY/$CHECK_SUITE_FILE_NAME"
-        echo "name: OpenTelemetry
+        path="$INPUT_WORKFLOWS_DIRECTORY/$INPUT_CHECK_SUITE_INSTRUMENTATION_FILE_NAME"
+        echo 'name: OpenTelemetry
         on:
           check_suite:
             types:
               - completed
         jobs:
           export:
-            if: github.event.check_suite.app.slug != 'github-actions'
+            if: github.event.check_suite.app.slug != '"'"'github-actions'"'"'
             runs-on: ubuntu-latest
             permissions:
               checks: read
             steps:
-              - uses: $DETERMINE_REPOSITORY/actions/instrument/checksuite@$INSTRUMENTATION_VERSION
-        " > "$path"
-        cat "$FIND_SELF_PATH" | yq ".jobs[].steps[] | select(.uses == \"$DETERMINE_REPOSITORY/actions/instrument/deploy*\") | .env | keys[]" | grep '^OTEL_' | while read -r key; do
-          value="$(cat "$FIND_SELF_PATH" | yq ".jobs[].steps[] | select(.uses == \"$DETERMINE_REPOSITORY/actions/instrument/deploy*\") | .env.$key")"
+              - uses: '"$DETERMINE_REPOSITORY"'/actions/instrument/checksuite@'"$DETERMINE_INSTRUMENTATION_VERSION"'
+        ' > "$path"
+        cat "$FIND_SELF_PATH" | yq '.jobs[].steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/deploy*") | .env | keys[]' | grep '^OTEL_' | while read -r key; do
+          value="$(cat "$FIND_SELF_PATH" | yq '.jobs[].steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/deploy*") | .env.'"$key")"
           yq -i '.jobs[].steps[0].env.'"$key"' = "'"$value"'"' "$path"
         done
     - name: "Deploy check suite-level startup optimization"
       if: ${{ inputs.check_suite_level_instrumentation == 'true' && inputs.check_suite_level_instrumentation_use_container == 'true' }}
       shell: bash
       env:
-        FIND_CHECK_SUITE_PATH: ${{ steps.find-check-suite-level-instrumentation.outputs.path }}
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
-        CHECK_SUITE_FILE_NAME: ${{ inputs.check_suite_instrumentation_file_name }}
-        INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
-        REPO_OWNER: ${{ github.repository_owner }}
-        GITHUB_TOKEN_VAL: ${{ inputs.github_token }}
+        FIND_CHECK_SUITE_LEVEL_INSTRUMENTATION_PATH: ${{ steps.find-check-suite-level-instrumentation.outputs.path }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_CHECK_SUITE_INSTRUMENTATION_FILE_NAME: ${{ inputs.check_suite_instrumentation_file_name }}
+        DETERMINE_INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
+        GITHUB_REPOSITORY_OWNER_VAL: ${{ github.repository_owner }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        if [ -w "$FIND_CHECK_SUITE_PATH" ]; then path="$FIND_CHECK_SUITE_PATH"; else path="$WORKFLOWS_DIRECTORY/$CHECK_SUITE_FILE_NAME"; fi
+        if [ -w "$FIND_CHECK_SUITE_LEVEL_INSTRUMENTATION_PATH" ]; then path="$FIND_CHECK_SUITE_LEVEL_INSTRUMENTATION_PATH"; else path="$INPUT_WORKFLOWS_DIRECTORY/$INPUT_CHECK_SUITE_INSTRUMENTATION_FILE_NAME"; fi
         if cat "$path" | yq '.jobs.export.container' | grep -q '^null$'; then
           name=opentelemetry-github-workflow-instrumentation-runner
-          version="$INSTRUMENTATION_VERSION"
+          version="$DETERMINE_INSTRUMENTATION_VERSION"
           [ "$version" != main ] || exit 0
-          image=ghcr.io/"$REPO_OWNER"/"$name":"$version"
-          if curl -s --fail --retry 8 --header "Authorization: Bearer $GITHUB_TOKEN_VAL" "${GITHUB_API_URL:-https://api.github.com}"/users/"$REPO_OWNER"/packages/container/"$name"/versions | jq .[].metadata.container.tags[] -r | grep -qE '^'"$version"'$' \
+          image=ghcr.io/"$GITHUB_REPOSITORY_OWNER_VAL"/"$name":"$version"
+          if curl -s --fail --retry 8 --header "Authorization: Bearer $INPUT_GITHUB_TOKEN" "${GITHUB_API_URL:-https://api.github.com}"/users/"$GITHUB_REPOSITORY_OWNER_VAL"/packages/container/"$name"/versions | jq .[].metadata.container.tags[] -r | grep -qE '^'"$version"'$' \
             || (type docker 1> /dev/null 2> /dev/null && sudo docker pull "$image"); then
             yq -i ".jobs.export.container = \"$image\"" "$path" && exit 0
           fi
@@ -347,14 +341,14 @@ runs:
       if: ${{ inputs.repository_level_instrumentation == 'true' && steps.find-repository-level-instrumentation.outputs.path == null }}
       shell: bash
       env:
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
-        REPOSITORY_FILE_NAME: ${{ inputs.repository_level_instrumentation_file_name }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_REPOSITORY_LEVEL_INSTRUMENTATION_FILE_NAME: ${{ inputs.repository_level_instrumentation_file_name }}
         DETERMINE_REPOSITORY: ${{ steps.determine-repository.outputs.repository }}
-        INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
+        DETERMINE_INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
         FIND_SELF_PATH: ${{ steps.find-self.outputs.path }}
       run: |
-        path="$WORKFLOWS_DIRECTORY/$REPOSITORY_FILE_NAME"
-        echo "name: OpenTelemetry
+        path="$INPUT_WORKFLOWS_DIRECTORY/$INPUT_REPOSITORY_LEVEL_INSTRUMENTATION_FILE_NAME"
+        echo 'name: OpenTelemetry
         on:
           pull_request:
             types: [ opened, reopened, closed ]
@@ -369,30 +363,30 @@ runs:
             permissions:
               contents: read
             steps:
-              - uses: $DETERMINE_REPOSITORY/actions/instrument/repository@$INSTRUMENTATION_VERSION
-        " > "$path"
-        cat "$FIND_SELF_PATH" | yq ".jobs[].steps[] | select(.uses == \"$DETERMINE_REPOSITORY/actions/instrument/deploy*\") | .env | keys[]" | grep '^OTEL_' | while read -r key; do
-          value="$(cat "$FIND_SELF_PATH" | yq ".jobs[].steps[] | select(.uses == \"$DETERMINE_REPOSITORY/actions/instrument/deploy*\") | .env.$key")"
+              - uses: '"$DETERMINE_REPOSITORY"'/actions/instrument/repository@'"$DETERMINE_INSTRUMENTATION_VERSION"'
+        ' > "$path"
+        cat "$FIND_SELF_PATH" | yq '.jobs[].steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/deploy*") | .env | keys[]' | grep '^OTEL_' | while read -r key; do
+          value="$(cat "$FIND_SELF_PATH" | yq '.jobs[].steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/deploy*") | .env.'"$key")"
           yq -i '.jobs[].steps[0].env.'"$key"' = "'"$value"'"' "$path"
         done
     - name: "Deploy repository-level startup optimization"
       if: ${{ inputs.repository_level_instrumentation == 'true' && inputs.repository_level_instrumentation_use_container == 'true' }}
       shell: bash
       env:
-        FIND_REPOSITORY_PATH: ${{ steps.find-repository-level-instrumentation.outputs.path }}
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
-        REPOSITORY_FILE_NAME: ${{ inputs.repository_level_instrumentation_file_name }}
-        INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
-        REPO_OWNER: ${{ github.repository_owner }}
-        GITHUB_TOKEN_VAL: ${{ inputs.github_token }}
+        FIND_REPOSITORY_LEVEL_INSTRUMENTATION_PATH: ${{ steps.find-repository-level-instrumentation.outputs.path }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_REPOSITORY_LEVEL_INSTRUMENTATION_FILE_NAME: ${{ inputs.repository_level_instrumentation_file_name }}
+        DETERMINE_INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
+        GITHUB_REPOSITORY_OWNER_VAL: ${{ github.repository_owner }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        if [ -w "$FIND_REPOSITORY_PATH" ]; then path="$FIND_REPOSITORY_PATH"; else path="$WORKFLOWS_DIRECTORY/$REPOSITORY_FILE_NAME"; fi
+        if [ -w "$FIND_REPOSITORY_LEVEL_INSTRUMENTATION_PATH" ]; then path="$FIND_REPOSITORY_LEVEL_INSTRUMENTATION_PATH"; else path="$INPUT_WORKFLOWS_DIRECTORY/$INPUT_REPOSITORY_LEVEL_INSTRUMENTATION_FILE_NAME"; fi
         if cat "$path" | yq '.jobs.export.container' | grep -q '^null$'; then
           name=opentelemetry-github-workflow-instrumentation-runner
-          version="$INSTRUMENTATION_VERSION"
+          version="$DETERMINE_INSTRUMENTATION_VERSION"
           [ "$version" != main ] || exit 0
-          image=ghcr.io/"$REPO_OWNER"/"$name":"$version"
-          if curl -s --fail --retry 8 --header "Authorization: Bearer $GITHUB_TOKEN_VAL" "${GITHUB_API_URL:-https://api.github.com}"/users/"$REPO_OWNER"/packages/container/"$name"/versions | jq .[].metadata.container.tags[] -r | grep -qE '^'"$version"'$' \
+          image=ghcr.io/"$GITHUB_REPOSITORY_OWNER_VAL"/"$name":"$version"
+          if curl -s --fail --retry 8 --header "Authorization: Bearer $INPUT_GITHUB_TOKEN" "${GITHUB_API_URL:-https://api.github.com}"/users/"$GITHUB_REPOSITORY_OWNER_VAL"/packages/container/"$name"/versions | jq .[].metadata.container.tags[] -r | grep -qE '^'"$version"'$' \
             || (type docker 1> /dev/null 2> /dev/null && sudo docker pull "$image"); then
             yq -i ".jobs.export.container = \"$image\"" "$path" && exit 0
           fi
@@ -403,9 +397,9 @@ runs:
       if: ${{ inputs.job_level_instrumentation == 'true' && inputs.job_level_instrumentation_copilot == 'true' }}
       shell: bash
       env:
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
       run: |
-        if [ -r "$WORKFLOWS_DIRECTORY"/copilot-setup-steps.yml ]; then exit 0; fi
+        if [ -r "$INPUT_WORKFLOWS_DIRECTORY"/copilot-setup-steps.yml ]; then exit 0; fi
         echo '
         name: Copilot setup steps
         on:
@@ -417,23 +411,23 @@ runs:
             runs-on: ubuntu-latest
             steps:
               - run: |
-                  :' > "$WORKFLOWS_DIRECTORY"/copilot-setup-steps.yml
+                  :' > "$INPUT_WORKFLOWS_DIRECTORY"/copilot-setup-steps.yml
     - name: "Deploy job-level instrumentation"
       if: ${{ inputs.job_level_instrumentation == 'true' }}
       shell: bash
       env:
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
-        JOB_LEVEL_EXCLUDE: ${{ inputs.job_level_instrumentation_exclude }}
-        FIND_WORKFLOW_LEVEL_PATH: ${{ steps.find-workflow-level-instrumentation.outputs.path }}
-        WORKFLOW_FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_JOB_LEVEL_INSTRUMENTATION_EXCLUDE: ${{ inputs.job_level_instrumentation_exclude }}
+        FIND_WORKFLOW_LEVEL_INSTRUMENTATION_PATH: ${{ steps.find-workflow-level-instrumentation.outputs.path }}
+        INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
         DETERMINE_REPOSITORY: ${{ steps.determine-repository.outputs.repository }}
-        INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
+        DETERMINE_INSTRUMENTATION_VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
         FIND_SELF_PATH: ${{ steps.find-self.outputs.path }}
       run: |
-        (ls "$WORKFLOWS_DIRECTORY"/*.yaml "$WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
-          [ -n "$JOB_LEVEL_EXCLUDE" ] && cat "$workflow_file" | yq .name | grep -qF "$(echo "$JOB_LEVEL_EXCLUDE" | tr ',' '\n' | tr ':' '\n' | tr ';' '\n')" && continue || true
-          [ "$workflow_file" != "$FIND_WORKFLOW_LEVEL_PATH" ] || continue
-          [ "$workflow_file" != "$WORKFLOWS_DIRECTORY/$WORKFLOW_FILE_NAME" ] || continue
+        (ls "$INPUT_WORKFLOWS_DIRECTORY"/*.yaml "$INPUT_WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
+          [ -n "$INPUT_JOB_LEVEL_INSTRUMENTATION_EXCLUDE" ] && cat "$workflow_file" | yq .name | grep -qF "$(echo "$INPUT_JOB_LEVEL_INSTRUMENTATION_EXCLUDE" | tr ',' '\n' | tr ':' '\n' | tr ';' '\n')" && continue || true
+          [ "$workflow_file" != "$FIND_WORKFLOW_LEVEL_INSTRUMENTATION_PATH" ] || continue
+          [ "$workflow_file" != "$INPUT_WORKFLOWS_DIRECTORY/$INPUT_WORKFLOW_LEVEL_INSTRUMENTATION_FILE_NAME" ] || continue
           cat "$workflow_file" | yq '.jobs | keys[]' | while read -r job_name; do
             cat "$workflow_file" | yq ".jobs.$job_name.steps" | grep -q '^null$' && continue || true
             cat "$workflow_file" | yq ".jobs.$job_name.container" | grep -q '^null$' || continue
@@ -441,9 +435,9 @@ runs:
             if [ -n "$(cat "$workflow_file" | yq ".jobs.$job_name.steps[] | select(.uses == \"$DETERMINE_REPOSITORY/actions/instrument/checksuite@*\") | .uses")" ]; then continue; fi
             if [ -n "$(cat "$workflow_file" | yq ".jobs.$job_name.steps[] | select(.uses == \"$DETERMINE_REPOSITORY/actions/instrument/repository@*\") | .uses")" ]; then continue; fi
             if [ -n "$(cat "$workflow_file" | yq ".jobs.$job_name.steps[] | select(.uses == \"$DETERMINE_REPOSITORY/actions/instrument/job@*\") | .uses")" ]; then continue; fi
-            yq -i ".jobs.$job_name.steps |= ([{ \"uses\": \"$DETERMINE_REPOSITORY/actions/instrument/job@$INSTRUMENTATION_VERSION\" }] + .)" "$workflow_file"
-            cat "$FIND_SELF_PATH" | yq ".jobs[].steps[] | select(.uses == \"$DETERMINE_REPOSITORY/actions/instrument/deploy*\") | .env | keys[]" | grep '^OTEL_' | while read -r key; do
-              yq -i ".jobs.$job_name.steps[0].env.$key = \"$(cat "$FIND_SELF_PATH" | yq ".jobs[].steps[] | select(.uses == \"$DETERMINE_REPOSITORY/actions/instrument/deploy*\") | .env.$key")\"" "$workflow_file"
+            yq -i ".jobs.$job_name.steps |= ([{ \"uses\": \"$DETERMINE_REPOSITORY/actions/instrument/job@$DETERMINE_INSTRUMENTATION_VERSION\" }] + .)" "$workflow_file"
+            cat "$FIND_SELF_PATH" | yq '.jobs[].steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/deploy*") | .env | keys[]' | grep '^OTEL_' | while read -r key; do
+              yq -i ".jobs.$job_name.steps[0].env.$key = \"$(cat "$FIND_SELF_PATH" | yq '.jobs[].steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/deploy*") | .env.'"$key")\"" "$workflow_file"
             done
           done
         done
@@ -451,22 +445,22 @@ runs:
       if: ${{ inputs.job_level_instrumentation == 'true' }}
       shell: bash
       env:
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
         DETERMINE_REPOSITORY: ${{ steps.determine-repository.outputs.repository }}
-        SECRET_REDACTION_STRATEGY: ${{ inputs.job_level_instrumentation_secret_redaction_strategy }}
+        INPUT_JOB_LEVEL_INSTRUMENTATION_SECRET_REDACTION_STRATEGY: ${{ inputs.job_level_instrumentation_secret_redaction_strategy }}
       run: |
-        (ls "$WORKFLOWS_DIRECTORY"/*.yaml "$WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
+        (ls "$INPUT_WORKFLOWS_DIRECTORY"/*.yaml "$INPUT_WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
           cat "$workflow_file" | yq '.jobs | keys[]' | while read -r job_name; do
             cat "$workflow_file" | yq ".jobs.$job_name.steps" | grep -qvF null || continue
             if [ -z "$(cat "$workflow_file" | yq '.jobs.'"$job_name"'.steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*") | .uses')" ]; then continue; fi
-            job_level_instrumentation_secret_redaction_strategy="$SECRET_REDACTION_STRATEGY"
+            job_level_instrumentation_secret_redaction_strategy="$INPUT_JOB_LEVEL_INSTRUMENTATION_SECRET_REDACTION_STRATEGY"
             if [ "$workflow_file" = '.github/workflows/copilot-setup-steps.yml' ]; then job_level_instrumentation_secret_redaction_strategy=none; fi
             case "$job_level_instrumentation_secret_redaction_strategy" in
               none)  [ "$(cat "$workflow_file" | yq '.jobs.'"$job_name"'.steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*") | .with.secrets_to_redact')" = null ] || yq -i 'del(.jobs.'"$job_name"'.steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*").with.secrets_to_redact)' "$workflow_file";;
               list)  [ "$(cat "$workflow_file" | yq '.jobs.'"$job_name"'.steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*") | .with.secrets_to_redact')" = "$(cat "$workflow_file" | yq '.jobs.'"$job_name"'.steps[] | select(.uses != "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*")' | { echo JHt7IGdpdGh1Yi50b2tlbiB9fQo= | base64 -d; grep -oE "$(echo XCR7e1tefV0qW1s6Ymxhbms6XV0qc2VjcmV0c1wuW2EtekEtWjAtOV8uLV0rW1s6Ymxhbms6XV0qW159XSp9fQ== | base64 -d)" || true; } | sort -u | jq --raw-input --slurp 'split("\n") | .[0:-1]' -c)" ] || yq -i '(.jobs.'"$job_name"'.steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*")).with.secrets_to_redact = "'"$(cat "$workflow_file" | yq '.jobs.'"$job_name"'.steps[] | select(.uses != "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*")' | { echo JHt7IGdpdGh1Yi50b2tlbiB9fQo= | base64 -d; grep -oE "$(echo XCR7e1tefV0qW1s6Ymxhbms6XV0qc2VjcmV0c1wuW2EtekEtWjAtOV8uLV0rW1s6Ymxhbms6XV0qW159XSp9fQ== | base64 -d)" || true; } | sort -u | jq --raw-input --slurp 'split("\n") | .[0:-1]' -c | sed 's/"/\\"/g')"'"' "$workflow_file";;
               plain) [ "$(cat "$workflow_file" | yq '.jobs.'"$job_name"'.steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*") | .with.secrets_to_redact')" = "$(cat "$workflow_file" | yq '.jobs.'"$job_name"'.steps[] | select(.uses != "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*")' | { echo JHt7IGdpdGh1Yi50b2tlbiB9fQo= | base64 -d; grep -oE "$(echo XCR7e1tefV0qW1s6Ymxhbms6XV0qc2VjcmV0c1wuW2EtekEtWjAtOV8uLV0rW1s6Ymxhbms6XV0qW159XSp9fQ== | base64 -d)" || true; } | sort -u | jq --raw-input --slurp 'split("\n") | .[0:-1]' -c)" ] || yq -i '(.jobs.'"$job_name"'.steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*")).with.secrets_to_redact = "'"$(cat "$workflow_file" | yq '.jobs.'"$job_name"'.steps[] | select(.uses != "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*")' | { echo JHt7IGdpdGh1Yi50b2tlbiB9fQo= | base64 -d; grep -oE "$(echo XCR7e1tefV0qW1s6Ymxhbms6XV0qc2VjcmV0c1wuW2EtekEtWjAtOV8uLV0rW1s6Ymxhbms6XV0qW159XSp9fQ== | base64 -d)" || true; } | sort -u | jq --raw-input --slurp 'split("\n") | .[0:-1]' | jq .[] -r | sed 's/"/\\"/g')"'"' "$workflow_file";;
                all)  [ "$(cat "$workflow_file" | yq '.jobs.'"$job_name"'.steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*") | .with.secrets_to_redact')" = "$(echo JHt7IHRvSlNPTihzZWNyZXRzKSB9fQo= | base64 -d)" ] || yq -i 'del((.jobs.'"$job_name"'.steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*")).with.secrets_to_redact) | (.jobs.'"$job_name"'.steps[] | select(.uses == "'"$DETERMINE_REPOSITORY"'/actions/instrument/job@*")).with.secrets_to_redact = "'"$(echo JHt7IHRvSlNPTihzZWNyZXRzKSB9fQo= | base64 -d)"'"' "$workflow_file";;
-                 *) echo "::error ::Illegal secret redaction strategy \"$SECRET_REDACTION_STRATEGY\"!" && exit 1;;
+                 *) echo "::error ::Illegal secret redaction strategy \"$INPUT_JOB_LEVEL_INSTRUMENTATION_SECRET_REDACTION_STRATEGY\"!" && exit 1;;
             esac
           done
         done
@@ -474,9 +468,9 @@ runs:
       if: ${{ inputs.job_level_instrumentation == 'true' }}
       shell: bash
       env:
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
       run: |
-        (ls "$WORKFLOWS_DIRECTORY"/*.yaml "$WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
+        (ls "$INPUT_WORKFLOWS_DIRECTORY"/*.yaml "$INPUT_WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
           cat "$workflow_file" | yq '.jobs | keys[]' | while read -r job_name; do
             cat "$workflow_file" | yq ".jobs.$job_name.steps" | grep -qvF null || continue
             if [ "$(cat "$workflow_file" | yq ".jobs.$job_name.permissions")" != null ] && [ "$(cat "$workflow_file" | yq ".jobs.$job_name.permissions.actions")" != read ] && [ "$(cat "$workflow_file" | yq ".jobs.$job_name.permissions.actions")" != write ]; then
@@ -492,9 +486,9 @@ runs:
     - name: "Restore blank lines"
       shell: bash
       env:
-        WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
+        INPUT_WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
       run: |
-        (ls "$WORKFLOWS_DIRECTORY"/*.yaml "$WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
+        (ls "$INPUT_WORKFLOWS_DIRECTORY"/*.yaml "$INPUT_WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
           if git diff -U0 -w -b --ignore-blank-lines "$workflow_file" > "$workflow_file".patch && git checkout "$workflow_file"; then
             patch "$workflow_file" < "$workflow_file".patch
           fi
@@ -546,6 +540,9 @@ runs:
       if: ${{ inputs.dry_run != 'true' }}
       id: push
       shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        INPUT_COMMIT_MESSAGE: ${{ inputs.commit_message }}
       run: |
         if [ -z "$(git status --porcelain)" ]; then exit 0; fi
         if gh api user --jq .id; then
@@ -559,11 +556,8 @@ runs:
         git config user.email "${user_id}+${user_name}@users.noreply.github.com"
         git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
         git add -A
-        git commit -m "$COMMIT_MESSAGE"
+        git commit -m "$INPUT_COMMIT_MESSAGE"
         git push && echo "pushed=true" >> "$GITHUB_OUTPUT" || echo "pushed=false" >> "$GITHUB_OUTPUT"
-      env:
-        GH_TOKEN: ${{ inputs.github_token }}
-        COMMIT_MESSAGE: ${{ inputs.commit_message }}
     - name: "Open Pull Request"
       if: ${{ inputs.dry_run != 'true' && steps.push.outputs.pushed == 'false' }}
       id: open-pr

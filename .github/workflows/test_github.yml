@@ -440,10 +440,8 @@ jobs:
         env:
           OTEL_SHELL_CONFIG_GITHUB_INJECT_ON_MAIN: 'TRUE'
           OTEL_SHELL_SDK_OUTPUT_REDIRECT: /dev/null
-      - env:
-          JOB_IO_1_FOO: ${{ needs.job-io-1.outputs.foo }}
-        run: |
-          [ "$JOB_IO_1_FOO" = bar ]
+      - run: |
+          [ ${{ needs.job-io-1.outputs.foo }} = bar ]
   job-background:
     needs: job-smoke
     runs-on: ubuntu-latest
@@ -803,10 +801,10 @@ jobs:
           name: packages.deb.${{ inputs.ref }}
       - id: workflow_run
         env:
-          GITHUB_TOKEN_VALUE: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN_VAL: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl -L --no-progress-meter --fail --retry 16 -H "Authorization: Bearer $GITHUB_TOKEN_VALUE" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/actions/workflows'?per_page=100&page=1' | jq --unbuffered -r '.workflows[] | select(.name == "Workflow Example") | .id' \
-            | xargs -I {} curl -L --no-progress-meter --fail --retry 16 -H "Authorization: Bearer $GITHUB_TOKEN_VALUE" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/actions/workflows/'{}'/runs'?status=success&branch=main&per_page=1&page=1' \
+          curl -L --no-progress-meter --fail --retry 16 -H "Authorization: Bearer $GITHUB_TOKEN_VAL" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/actions/workflows'?per_page=100&page=1' | jq --unbuffered -r '.workflows[] | select(.name == "Workflow Example") | .id' \
+            | xargs -I {} curl -L --no-progress-meter --fail --retry 16 -H "Authorization: Bearer $GITHUB_TOKEN_VAL" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/actions/workflows/'{}'/runs'?status=success&branch=main&per_page=1&page=1' \
             | jq --unbuffered -r '.workflow_runs[] | [ .id, .run_attempt ] | @tsv' | sed 's/\t/ /g' | {
               read -r id run_attempt
               echo "id=$id" >> "$GITHUB_OUTPUT"
@@ -850,10 +848,10 @@ jobs:
           name: packages.deb.${{ inputs.ref }}
       - id: workflow_run
         env:
-          GITHUB_TOKEN_VALUE: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN_VAL: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl -L --no-progress-meter --fail --retry 16 -H "Authorization: Bearer $GITHUB_TOKEN_VALUE" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/actions/workflows'?per_page=100&page=1' | jq --unbuffered -r '.workflows[] | select(.name == "Workflow Example") | .id' \
-            | xargs -I {} curl -L --no-progress-meter --fail --retry 16 -H "Authorization: Bearer $GITHUB_TOKEN_VALUE" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/actions/workflows/'{}'/runs'?status=success&branch=main&per_page=1&page=1' \
+          curl -L --no-progress-meter --fail --retry 16 -H "Authorization: Bearer $GITHUB_TOKEN_VAL" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/actions/workflows'?per_page=100&page=1' | jq --unbuffered -r '.workflows[] | select(.name == "Workflow Example") | .id' \
+            | xargs -I {} curl -L --no-progress-meter --fail --retry 16 -H "Authorization: Bearer $GITHUB_TOKEN_VAL" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/actions/workflows/'{}'/runs'?status=success&branch=main&per_page=1&page=1' \
             | jq --unbuffered -r '.workflow_runs[] | [ .id, .run_attempt ] | @tsv' | sed 's/\t/ /g' | {
               read -r id run_attempt
               echo "id=$id" >> "$GITHUB_OUTPUT"
@@ -878,12 +876,12 @@ jobs:
           OTEL_TRACES_EXPORTER: console
           OTEL_SHELL_SDK_OUTPUT_REDIRECT: '${{ steps.filename.outputs.otlp }}'
       - env:
-          GITHUB_TOKEN_VALUE: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WORKFLOW_RUN_ID: ${{ steps.workflow_run.outputs.id }}
           WORKFLOW_RUN_ATTEMPT: ${{ steps.workflow_run.outputs.run_attempt }}
         run: |
           . ./actions/instrument/shared/github.sh
-          INPUT_GITHUB_TOKEN="$GITHUB_TOKEN_VALUE" gh_artifact_download "$WORKFLOW_RUN_ID" "$WORKFLOW_RUN_ATTEMPT" "opentelemetry_workflow_run_${WORKFLOW_RUN_ATTEMPT}" .
+          gh_artifact_download "$WORKFLOW_RUN_ID" "$WORKFLOW_RUN_ATTEMPT" "opentelemetry_workflow_run_${WORKFLOW_RUN_ATTEMPT}" .
       - env:
           OTLP_JSON: '${{ steps.filename.outputs.otlp }}'
         run: |
@@ -915,10 +913,10 @@ jobs:
           name: packages.deb.${{ inputs.ref }}
       - id: check_suite
         env:
-          GITHUB_TOKEN_VALUE: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN_VAL: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl -L --no-progress-meter --fail --retry 16 -H "Authorization: Bearer $GITHUB_TOKEN_VALUE" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/branches'?per_page=100&page=1' | jq '.[].name' -r \
-           | xargs -I '{}' curl -L --no-progress-meter --fail --retry 16 -H "Authorization: Bearer $GITHUB_TOKEN_VALUE" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/commits/'{}'/check-suites'?per_page=100&page=1' | jq --unbuffered '.check_suites[] | select(.app.slug == "github-actions" | not) | .id' -r | tail -n 1 | {
+          curl -L --no-progress-meter --fail --retry 16 -H "Authorization: Bearer $GITHUB_TOKEN_VAL" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/branches'?per_page=100&page=1' | jq '.[].name' -r \
+           | xargs -I '{}' curl -L --no-progress-meter --fail --retry 16 -H "Authorization: Bearer $GITHUB_TOKEN_VAL" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/commits/'{}'/check-suites'?per_page=100&page=1' | jq --unbuffered '.check_suites[] | select(.app.slug == "github-actions" | not) | .id' -r | tail -n 1 | {
             read -r id
             echo "id=$id" >> "$GITHUB_OUTPUT"
           }
@@ -1187,12 +1185,12 @@ jobs:
       - id: config
         env:
           TEST_GITHUB_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
-          REPOSITORY_TEMPLATE: ${{ env.REPOSITORY_TEMPLATE }}
-          GITHUB_WORKFLOW_NAME: ${{ github.workflow }}
-          GITHUB_REF_NAME_VALUE: ${{ github.ref_name }}
+          REPOSITORY_TEMPLATE_VAL: ${{ env.REPOSITORY_TEMPLATE }}
+          GITHUB_WORKFLOW_VAL: ${{ github.workflow }}
+          GITHUB_REF_NAME_VAL: ${{ github.ref_name }}
         run: |
           curl -L -H "Authorization: Bearer $TEST_GITHUB_TOKEN" "${GITHUB_API_URL:-https://api.github.com}"/user | jq -r .login | xargs -I '{}' echo "user={}" >> "$GITHUB_OUTPUT"
-          safe_repo=$(printf '%s' "${REPOSITORY_TEMPLATE}-${GITHUB_WORKFLOW_NAME}-${GITHUB_REF_NAME_VALUE}" | tr / - | cut -c -100 | tr -d '\n\r')
+          safe_repo="$(printf '%s' "$REPOSITORY_TEMPLATE_VAL-$GITHUB_WORKFLOW_VAL-$GITHUB_REF_NAME_VAL" | tr / - | cut -c -100 | tr -d '\n\r')"
           echo "repository=$safe_repo" >> "$GITHUB_OUTPUT"
       - env:
           TEST_GITHUB_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
@@ -1236,20 +1234,21 @@ jobs:
           nohup node -e "require('http').createServer(function (req, res) { console.log(req.method, req.url); res.writeHead(200); res.end(); }).listen(8080);" 1> /tmp/http.log 2> /dev/null &
       - env:
           TEST_GITHUB_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
-          GITHUB_TOKEN_VALUE: ${{ github.token }}
-          GITHUB_REPOSITORY_VALUE: ${{ github.repository }}
-          GITHUB_SHA_VALUE: ${{ github.sha }}
-          INPUTS_REF: ${{ inputs.ref }}
-          MATRIX_SECRET_REDACTION_STRATEGY: ${{ matrix.secret_redaction_strategy }}
+          GITHUB_TOKEN_VAL: ${{ github.token }}
+          GITHUB_REPOSITORY_VAL: ${{ github.repository }}
+          GITHUB_SHA_VAL: ${{ github.sha }}
           CONFIG_USER: ${{ steps.config.outputs.user }}
           CONFIG_REPOSITORY: ${{ steps.config.outputs.repository }}
+          GITHUB_REPOSITORY_SELF: ${{ github.repository }}
+          INPUTS_REF: ${{ inputs.ref }}
+          MATRIX_SECRET_REDACTION_STRATEGY: ${{ matrix.secret_redaction_strategy }}
         run: |
           printf '%s' "$TEST_GITHUB_TOKEN" | GH_TOKEN="$TEST_GITHUB_TOKEN" gh secret set DEPLOY_OBSERVABILITY_TOKEN --repo "$CONFIG_USER/$CONFIG_REPOSITORY"
-          wget --header "Authorization: Bearer $GITHUB_TOKEN_VALUE" "https://raw.githubusercontent.com/$GITHUB_REPOSITORY_VALUE/$GITHUB_SHA_VALUE/README.md" -O - | sed -n '/```yaml/,/```/p' | grep -v '```yaml' | sed '/```/,$d' > .github/workflows/deploy_otel.yml
+          wget --header "Authorization: Bearer $GITHUB_TOKEN_VAL" https://raw.githubusercontent.com/"$GITHUB_REPOSITORY_VAL"/"$GITHUB_SHA_VAL"/README.md -O - | sed -n '/```yaml/,/```/p' | grep -v '```yaml' | sed '/```/,$d' > .github/workflows/deploy_otel.yml
           cat .github/workflows/deploy_otel.yml | yq .jobs.deploy.steps[0].uses | grep -q '/actions/instrument/deploy@'
           cat .github/workflows/deploy_otel.yml | yq .jobs.deploy.steps[0].with.github_token | grep -q secrets.DEPLOY_OBSERVABILITY_TOKEN
           yq -i 'del(.jobs.deploy.steps[0].env)' .github/workflows/deploy_otel.yml
-          yq -i ".jobs.deploy.steps[0].uses = \"$GITHUB_REPOSITORY_VALUE/actions/instrument/deploy@$INPUTS_REF\"" .github/workflows/deploy_otel.yml
+          yq -i ".jobs.deploy.steps[0].uses = \"$GITHUB_REPOSITORY_SELF/actions/instrument/deploy@$INPUTS_REF\"" .github/workflows/deploy_otel.yml
           yq -i ".jobs.deploy.steps[0].with.job_level_instrumentation_secret_redaction_strategy = \"$MATRIX_SECRET_REDACTION_STRATEGY\"" .github/workflows/deploy_otel.yml
           yq -i '.jobs.deploy.steps[0].env.OTEL_EXPORTER_OTLP_ENDPOINT = "http://'"$(curl 'https://api.ipify.org?format=json' | jq -r .ip)"':8080"' .github/workflows/deploy_otel.yml
           git add . && git commit --message "added deploy action" && git push
