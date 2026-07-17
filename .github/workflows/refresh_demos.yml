@@ -52,14 +52,14 @@ jobs:
       - id: demo
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
-        env:
           GITHUB_TOKEN_VAL: ${{ github.token }}
           DEMO_DIRECTORY: ${{ matrix.demo_directory }}
         run: |
           set +o pipefail
+          _saved_token="$GITHUB_TOKEN_VAL"
           for name in $(printenv | cut -d = -f 1 | grep '^GITHUB_'); do unset "$name"; done
-          export GITHUB_TOKEN="$GITHUB_TOKEN_VAL"
-          cd demos/"$DEMO_DIRECTORY"
+          export GITHUB_TOKEN="$_saved_token"
+          cd "demos/$DEMO_DIRECTORY"
           echo "
           receivers:
             otlp:
@@ -97,13 +97,13 @@ jobs:
           while [ "$(pgrep -cf /opt/opentelemetry_shell/)" -gt 0 ]; do sleep 3; done
           sudo docker stop collector
           rm config.yaml
-          sed -i "s/$GITHUB_TOKEN_VAL/***/g" otlp.json
+          sed -i "s/$_saved_token/***/g" otlp.json
       - env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
           DEMO_DIRECTORY: ${{ matrix.demo_directory }}
         run: |
           set +o pipefail
-          cd demos/"$DEMO_DIRECTORY"
+          cd "demos/$DEMO_DIRECTORY"
 
           spans() {
             cat otlp.json | jq '. | select(.resourceSpans != null) | .resourceSpans[].scopeSpans[].spans[]'
@@ -241,7 +241,7 @@ jobs:
       - env:
           DEMO_DIRECTORY: ${{ matrix.demo_directory }}
         run: |
-          cd demos/"$DEMO_DIRECTORY"
+          cd "demos/$DEMO_DIRECTORY"
           git add --intent-to-add README.md output.stdout output.stderr otlp.json
           git diff README.md | grep -v '^+++' | grep -v '^---' | grep -v '/tmp' | grep -v Id | grep -v _id | grep -v .id | grep -v Time | grep -v time | grep -v timestamp | grep -v github. | grep -v vcs. | grep -v .version | grep -v .ip | grep -v .port | grep -v peer. | grep -v process.pid | grep -v process.parent_pid | grep -v http.user_agent | grep -v host.name | grep -v host.type | grep -v cloud.region | grep -v '"00-' | grep -q '^+' && echo dirty=true >> "$GITHUB_OUTPUT" || true
         id: diff

@@ -109,12 +109,12 @@ jobs:
           subject-path: '*.apk'
 
       - env:
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION_VAL: ${{ steps.version.outputs.version }}
           GITHUB_TOKEN_VAL: ${{ github.token }}
           GITHUB_ACTOR_VAL: ${{ github.actor }}
           MATRIX_REF: ${{ matrix.ref }}
         run: |
-          version="$VERSION"
+          version="$VERSION_VAL"
           major=$(echo "$version" | cut -d . -f 1)
           minor=$(echo "$version" | cut -d . -f 2)
           patch=$(echo "$version" | cut -d . -f 3)
@@ -146,9 +146,9 @@ jobs:
           fail_on_unmatched_files: true
 
       - env:
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION_VAL: ${{ steps.version.outputs.version }}
         run: |
-          version="$VERSION"
+          version="$VERSION_VAL"
           major=$(echo "$version" | cut -d . -f 1)
           minor=$(echo "$version" | cut -d . -f 2)
           git tag -f "v${major}.${minor}"

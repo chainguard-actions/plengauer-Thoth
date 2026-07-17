@@ -119,9 +119,9 @@ jobs:
           MATRIX_REF: ${{ matrix.ref }}
         run: |
           set -e
-          safe_commit_title="$(printf '%s' "$(git log -1 --pretty=%s "$MATRIX_REF")" | tr -d '\n\r')"
-          safe_author_name="$(printf '%s' "$(git log -1 --pretty=%an "$MATRIX_REF" 2>/dev/null || echo "")" | tr -d '\n\r')"
-          safe_author_email="$(printf '%s' "$(git log -1 --pretty=%ae "$MATRIX_REF" 2>/dev/null || echo "")" | tr -d '\n\r')"
+          safe_commit_title=$(git log -1 --pretty=%s "$MATRIX_REF" | tr -d '\n\r')
+          safe_author_name=$(git log -1 --pretty=%an "$MATRIX_REF" 2>/dev/null | tr -d '\n\r' || echo "")
+          safe_author_email=$(git log -1 --pretty=%ae "$MATRIX_REF" 2>/dev/null | tr -d '\n\r' || echo "")
           echo "commit_title=$safe_commit_title" >> "$GITHUB_OUTPUT"
           echo "author_name=$safe_author_name" >> "$GITHUB_OUTPUT"
           echo "author_email=$safe_author_email" >> "$GITHUB_OUTPUT"
