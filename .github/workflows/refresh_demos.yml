@@ -29,7 +29,7 @@ jobs:
           OTEL_EXPORTER_OTLP_HEADERS: '${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}'
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - run: |
-          cd demos && echo */ | tr ' ' '\n' | tr -d / | while read -r dir; do echo \"$dir\"; done | jq -s | tr -d ' ' | tr -d '\n' | xargs -0 -I {} echo 'dirs={}' >> "$GITHUB_OUTPUT"
+          cd demos && echo */ | tr ' ' '\n' | tr -d / | while read -r dir; do echo \""$dir"\"; done | jq -s | tr -d ' ' | tr -d '\n' | xargs -0 -I {} echo 'dirs={}' >> "$GITHUB_OUTPUT"
         id: demos
   generate:
     if: ${{ !github.event.repository.fork }}
@@ -44,23 +44,21 @@ jobs:
         demo_directory: ${{ fromJSON(needs.prepare.outputs.dirs) }}
     steps:
       - env:
-          GITHUB_TOKEN_VAL: ${{ github.token }}
-          GITHUB_EVENT_VAL: ${{ github.event_name }}
-          GITHUB_EVENT_PATH_VAL: ${{ github.event_path }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          ([ "$GITHUB_EVENT_VAL" = release ] && cat "$GITHUB_EVENT_PATH_VAL" || curl --header "Authorization: Bearer $GITHUB_TOKEN_VAL" https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases/latest) | jq -r '.assets[] | select(.name | endswith("_amd64.deb")) | .url' | xargs wget --header "Authorization: Bearer $GITHUB_TOKEN_VAL" --header "Accept: application/octet-stream" -O package.deb
+          ([ "$GITHUB_EVENT" = release ] && cat "$GITHUB_EVENT_PATH" || curl --header "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases/latest) | jq -r '.assets[] | select(.name | endswith("_amd64.deb")) | .url' | xargs wget --header "Authorization: Bearer $GH_TOKEN" --header "Accept: application/octet-stream" -O package.deb
       - run: sudo apt-get -y install ./package.deb
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - id: demo
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
-          GITHUB_TOKEN_VAL: ${{ github.token }}
-          MATRIX_DEMO_DIRECTORY: ${{ matrix.demo_directory }}
+          GH_TOKEN_INNER: ${{ github.token }}
+          DEMO_DIRECTORY: ${{ matrix.demo_directory }}
         run: |
           set +o pipefail
           for name in $(printenv | cut -d = -f 1 | grep '^GITHUB_'); do unset "$name"; done
-          export GITHUB_TOKEN="$GITHUB_TOKEN_VAL"
-          cd demos/"$MATRIX_DEMO_DIRECTORY"
+          export GITHUB_TOKEN="$GH_TOKEN_INNER"
+          cd demos/"$DEMO_DIRECTORY"
           echo "
           receivers:
             otlp:
@@ -98,13 +96,13 @@ jobs:
           while [ "$(pgrep -cf /opt/opentelemetry_shell/)" -gt 0 ]; do sleep 3; done
           sudo docker stop collector
           rm config.yaml
-          sed -i "s/$GITHUB_TOKEN_VAL/***/g" otlp.json
+          sed -i "s/$GH_TOKEN_INNER/***/g" otlp.json
       - env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
-          MATRIX_DEMO_DIRECTORY: ${{ matrix.demo_directory }}
+          DEMO_DIRECTORY: ${{ matrix.demo_directory }}
         run: |
           set +o pipefail
-          cd demos/"$MATRIX_DEMO_DIRECTORY"
+          cd demos/"$DEMO_DIRECTORY"
 
           spans() {
             cat otlp.json | jq '. | select(.resourceSpans != null) | .resourceSpans[].scopeSpans[].spans[]'
@@ -184,8 +182,8 @@ jobs:
 
           pretty_print_trace() {
             cat otlp.json | jq -r '. | select(.resourceSpans != null) | .resourceSpans[].scopeSpans[].spans[]' | jq -r -s '. | sort_by(.startTimeUnixNano) | .[].spanId' | while read -r span_id; do
-              span="$(spans | jq 'select(.spanId == "'"$span_id"'")')"
-              resource_attributes="$(cat otlp.json | jq --sort-keys '. | select(.resourceSpans != null) | .resourceSpans[] | select(.scopeSpans[].spans[].spanId == "'"$span_id"'") | .resource.attributes')"
+              span="$(spans | jq 'select(.spanId == "'$span_id'")')"
+              resource_attributes="$(cat otlp.json | jq --sort-keys '. | select(.resourceSpans != null) | .resourceSpans[] | select(.scopeSpans[].spans[].spanId == "'$span_id'") | .resource.attributes')"
               jq -n \
                 --argjson trace_id "$(printf '%s' "$span" | jq .traceId)" \
                 --argjson span_id "$(printf '%s' "$span" | jq .spanId)" \
@@ -240,9 +238,9 @@ jobs:
           jq . < otlp.json.minimized > otlp.json
           rm otlp.json.minimized
       - env:
-          MATRIX_DEMO_DIRECTORY: ${{ matrix.demo_directory }}
+          DEMO_DIRECTORY: ${{ matrix.demo_directory }}
         run: |
-          cd demos/"$MATRIX_DEMO_DIRECTORY"
+          cd demos/"$DEMO_DIRECTORY"
           git add --intent-to-add README.md output.stdout output.stderr otlp.json
           git diff README.md | grep -v '^+++' | grep -v '^---' | grep -v '/tmp' | grep -v Id | grep -v _id | grep -v .id | grep -v Time | grep -v time | grep -v timestamp | grep -v github. | grep -v vcs. | grep -v .version | grep -v .ip | grep -v .port | grep -v peer. | grep -v process.pid | grep -v process.parent_pid | grep -v http.user_agent | grep -v host.name | grep -v host.type | grep -v cloud.region | grep -v '"00-' | grep -q '^+' && echo dirty=true >> "$GITHUB_OUTPUT" || true
         id: diff

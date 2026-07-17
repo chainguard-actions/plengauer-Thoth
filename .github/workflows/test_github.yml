@@ -878,12 +878,12 @@ jobs:
           OTEL_TRACES_EXPORTER: console
           OTEL_SHELL_SDK_OUTPUT_REDIRECT: '${{ steps.filename.outputs.otlp }}'
       - env:
-          INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN_VALUE: ${{ secrets.GITHUB_TOKEN }}
           WORKFLOW_RUN_ID: ${{ steps.workflow_run.outputs.id }}
           WORKFLOW_RUN_ATTEMPT: ${{ steps.workflow_run.outputs.run_attempt }}
         run: |
           . ./actions/instrument/shared/github.sh
-          gh_artifact_download "$WORKFLOW_RUN_ID" "$WORKFLOW_RUN_ATTEMPT" "opentelemetry_workflow_run_${WORKFLOW_RUN_ATTEMPT}" .
+          INPUT_GITHUB_TOKEN=$GITHUB_TOKEN_VALUE gh_artifact_download "$WORKFLOW_RUN_ID" "$WORKFLOW_RUN_ATTEMPT" "opentelemetry_workflow_run_${WORKFLOW_RUN_ATTEMPT}" .
       - env:
           OTLP_JSON: '${{ steps.filename.outputs.otlp }}'
         run: |
@@ -1187,12 +1187,15 @@ jobs:
       - id: config
         env:
           TEST_GITHUB_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
-          REPOSITORY_TEMPLATE: ${{ env.REPOSITORY_TEMPLATE }}
-          GITHUB_WORKFLOW_NAME: ${{ github.workflow }}
-          GITHUB_REF_NAME_VAL: ${{ github.ref_name }}
+          REPOSITORY_TEMPLATE_VALUE: ${{ env.REPOSITORY_TEMPLATE }}
+          GITHUB_WORKFLOW_VALUE: ${{ github.workflow }}
+          GITHUB_REF_NAME_VALUE: ${{ github.ref_name }}
         run: |
           curl -L -H "Authorization: Bearer $TEST_GITHUB_TOKEN" "${GITHUB_API_URL:-https://api.github.com}"/user | jq -r .login | xargs -I '{}' echo "user={}" >> "$GITHUB_OUTPUT"
-          safe_repo="$(printf '%s' "$REPOSITORY_TEMPLATE-$GITHUB_WORKFLOW_NAME-$GITHUB_REF_NAME_VAL" | tr / - | cut -c -100 | tr -d '\n\r')"
+          safe_template=$(printf '%s' "$REPOSITORY_TEMPLATE_VALUE" | tr -d '\n\r')
+          safe_workflow=$(printf '%s' "$GITHUB_WORKFLOW_VALUE" | tr -d '\n\r')
+          safe_ref_name=$(printf '%s' "$GITHUB_REF_NAME_VALUE" | tr -d '\n\r')
+          safe_repo=$(echo "${safe_template}-${safe_workflow}-${safe_ref_name}" | tr / - | cut -c -100)
           echo "repository=$safe_repo" >> "$GITHUB_OUTPUT"
       - env:
           TEST_GITHUB_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
@@ -1236,21 +1239,21 @@ jobs:
           nohup node -e "require('http').createServer(function (req, res) { console.log(req.method, req.url); res.writeHead(200); res.end(); }).listen(8080);" 1> /tmp/http.log 2> /dev/null &
       - env:
           TEST_GITHUB_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
-          GITHUB_TOKEN_VAL: ${{ github.token }}
-          GITHUB_REPOSITORY_VAL: ${{ github.repository }}
-          GITHUB_SHA_VAL: ${{ github.sha }}
+          GITHUB_TOKEN_VALUE: ${{ github.token }}
+          GITHUB_REPOSITORY_VALUE: ${{ github.repository }}
+          GITHUB_SHA_VALUE: ${{ github.sha }}
+          INPUTS_REF: ${{ inputs.ref }}
+          MATRIX_SECRET_REDACTION_STRATEGY: ${{ matrix.secret_redaction_strategy }}
           CONFIG_USER: ${{ steps.config.outputs.user }}
           CONFIG_REPOSITORY: ${{ steps.config.outputs.repository }}
-          GITHUB_REPOSITORY_REF: ${{ github.repository }}/actions/instrument/deploy@${{ inputs.ref }}
-          MATRIX_SECRET_REDACTION_STRATEGY: ${{ matrix.secret_redaction_strategy }}
         run: |
           printf '%s' "$TEST_GITHUB_TOKEN" | GH_TOKEN="$TEST_GITHUB_TOKEN" gh secret set DEPLOY_OBSERVABILITY_TOKEN --repo "$CONFIG_USER"/"$CONFIG_REPOSITORY"
-          wget --header "Authorization: Bearer $GITHUB_TOKEN_VAL" https://raw.githubusercontent.com/"$GITHUB_REPOSITORY_VAL"/"$GITHUB_SHA_VAL"/README.md -O - | sed -n '/```yaml/,/```/p' | grep -v '```yaml' | sed '/```/,$d' > .github/workflows/deploy_otel.yml
+          wget --header "Authorization: Bearer $GITHUB_TOKEN_VALUE" "https://raw.githubusercontent.com/${GITHUB_REPOSITORY_VALUE}/${GITHUB_SHA_VALUE}/README.md" -O - | sed -n '/```yaml/,/```/p' | grep -v '```yaml' | sed '/```/,$d' > .github/workflows/deploy_otel.yml
           cat .github/workflows/deploy_otel.yml | yq .jobs.deploy.steps[0].uses | grep -q '/actions/instrument/deploy@'
           cat .github/workflows/deploy_otel.yml | yq .jobs.deploy.steps[0].with.github_token | grep -q secrets.DEPLOY_OBSERVABILITY_TOKEN
           yq -i 'del(.jobs.deploy.steps[0].env)' .github/workflows/deploy_otel.yml
-          yq -i ".jobs.deploy.steps[0].uses = \"$GITHUB_REPOSITORY_REF\"" .github/workflows/deploy_otel.yml
-          yq -i ".jobs.deploy.steps[0].with.job_level_instrumentation_secret_redaction_strategy = \"$MATRIX_SECRET_REDACTION_STRATEGY\"" .github/workflows/deploy_otel.yml
+          yq -i ".jobs.deploy.steps[0].uses = \"${GITHUB_REPOSITORY_VALUE}/actions/instrument/deploy@${INPUTS_REF}\"" .github/workflows/deploy_otel.yml
+          yq -i ".jobs.deploy.steps[0].with.job_level_instrumentation_secret_redaction_strategy = \"${MATRIX_SECRET_REDACTION_STRATEGY}\"" .github/workflows/deploy_otel.yml
           yq -i '.jobs.deploy.steps[0].env.OTEL_EXPORTER_OTLP_ENDPOINT = "http://'"$(curl 'https://api.ipify.org?format=json' | jq -r .ip)"':8080"' .github/workflows/deploy_otel.yml
           git add . && git commit --message "added deploy action" && git push
       - run: |

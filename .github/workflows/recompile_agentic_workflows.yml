@@ -63,8 +63,8 @@ jobs:
         run: sleep 60 # make sure PR state is updated and API can catch up
       - if: steps.open-pr.outputs.pull-request-number != null
         shell: bash
+        run: gh pr merge --squash --auto "$PR_NUMBER"
         env:
           GH_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.open-pr.outputs.pull-request-number }}
-        run: gh pr merge --squash --auto "$PR_NUMBER"
         continue-on-error: true

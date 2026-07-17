@@ -63,10 +63,10 @@ jobs:
       actions: read
     steps:
       - env:
-          GITHUB_TOKEN_VAL: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
           MATRIX_VERSION: ${{ matrix.version }}
         run: |
-          curl --no-progress-meter --fail --header "Authorization: Bearer $GITHUB_TOKEN_VAL" https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases/tags/"$MATRIX_VERSION" | jq -r '.assets | if . | any(.name | endswith("_all.deb")) then .[] | select(.name | endswith("_all.deb")) else .[] | select(.name | endswith(".deb")) end | .url' | head -n 1 | xargs wget --header "Authorization: Bearer $GITHUB_TOKEN_VAL" --header "Accept: application/octet-stream" -O package.deb
+          curl --no-progress-meter --fail --header "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases/tags/"$MATRIX_VERSION" | jq -r '.assets | if . | any(.name | endswith("_all.deb")) then .[] | select(.name | endswith("_all.deb")) else .[] | select(.name | endswith(".deb")) end | .url' | head -n 1 | xargs wget --header "Authorization: Bearer $GH_TOKEN" --header "Accept: application/octet-stream" -O package.deb
       - run: sudo apt-get -y install ./package.deb
       - run: rm package.deb
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -246,7 +246,7 @@ jobs:
           DEPENDENCY: ${{ matrix.dependency }}
           MATRIX_IMAGE: ${{ matrix.image }}
         run: |
-          sudo -E docker run --mount type=bind,src=$(pwd)/opentelemetry-shell_"$(cat VERSION)"_all.deb,dst=/root/package.deb --mount type=bind,src="$(pwd)"/opentelemetry-shell-"$(cat VERSION)"-1.noarch.rpm,dst=/root/package.rpm --mount type=bind,src="$(pwd)"/opentelemetry-shell-"$(cat VERSION)"-r0.apk,dst=/root/package.apk --rm --network=host -e DEPENDENCY -i --entrypoint=/bin/sh "$MATRIX_IMAGE" -e <<EOF
+          sudo -E docker run --mount type=bind,src=$(pwd)/opentelemetry-shell_"$(cat VERSION)"_all.deb,dst=/root/package.deb --mount type=bind,src="$(pwd)"/opentelemetry-shell-"$(cat VERSION)"-1.noarch.rpm,dst=/root/package.rpm --mount type=bind,src="$(pwd)"/opentelemetry-shell-"$(cat VERSION)"-r0.apk,dst=/root/package.apk --rm --network=host -e DEPENDENCY -i --entrypoint=/bin/sh "$MATRIX_IMAGE" -e <<'EOF'
           if type apt-get; then
             apt-get update
             apt-get -y remove $DEPENDENCY
@@ -344,10 +344,10 @@ jobs:
           merge-multiple: true
       - run: mv *.deb *.rpm *.apk tests
       - env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MATRIX_IMAGE: ${{ matrix.image }}
           MATRIX_UPDATE: ${{ matrix.update }}
           MATRIX_SHELL: ${{ matrix.shell }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash -c 'cd tests && bash run_tests_containerized.sh "$MATRIX_IMAGE" "$MATRIX_UPDATE" "$MATRIX_SHELL"'
   windows-shell:
     needs: [list-shells, smoke]
@@ -385,7 +385,7 @@ jobs:
           done
           [ "$MATRIX_SHELL" = sh ] || sudo -E apt-get -y install "$MATRIX_SHELL" || exit 0
           dos2unix tests/*.sh tests/*/*
-          bash -c "cd tests && bash run_tests.sh $MATRIX_SHELL"
+          bash -c "cd tests && bash run_tests.sh \"$MATRIX_SHELL\""
           sudo apt-get -y remove opentelemetry-shell
   prepare-performance:
     needs: smoke
@@ -425,12 +425,12 @@ jobs:
           name: packages.deb.${{ inputs.ref }}
       - if: matrix.version != '~local'
         env:
-          GITHUB_TOKEN_VAL: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
           MATRIX_VERSION: ${{ matrix.version }}
         run: |
-          url="$(curl --no-progress-meter --fail --header "Authorization: Bearer $GITHUB_TOKEN_VAL" https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases/tags/"$MATRIX_VERSION" | jq '.assets[] | select(.name | endswith("_all.deb")) | .url' -r)"
-          if [ -z "$url" ]; then url="$(curl --no-progress-meter --fail --header "Authorization: Bearer $GITHUB_TOKEN_VAL" https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases/tags/"$MATRIX_VERSION" | jq '.assets[] | select(.name | endswith(".deb")) | .url' -r)"; fi
-          wget --header "Authorization: Bearer $GITHUB_TOKEN_VAL" --header "Accept: application/octet-stream" -O "opentelemetry-shell_${MATRIX_VERSION}_all.deb" "$url"
+          url="$(curl --no-progress-meter --fail --header "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases/tags/"$MATRIX_VERSION" | jq '.assets[] | select(.name | endswith("_all.deb")) | .url' -r)"
+          if [ -z "$url" ]; then url="$(curl --no-progress-meter --fail --header "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases/tags/"$MATRIX_VERSION" | jq '.assets[] | select(.name | endswith(".deb")) | .url' -r)"; fi
+          wget --header "Authorization: Bearer $GH_TOKEN" --header "Accept: application/octet-stream" -O "opentelemetry-shell_${MATRIX_VERSION}_all.deb" "$url"
       - if: matrix.version == '~local'
         env:
           MATRIX_VERSION: ${{ matrix.version }}

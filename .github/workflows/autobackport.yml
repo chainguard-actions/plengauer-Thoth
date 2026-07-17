@@ -28,14 +28,14 @@ jobs:
           fetch-tags: true
       - id: dynamic
         env:
-          GITHUB_SHA_VAL: ${{ github.sha }}
-          GITHUB_EVENT_PATH_VAL: ${{ github.event_path }}
+          GIT_SHA: ${{ github.sha }}
+          EVENT_PATH: ${{ github.event_path }}
         run: |
-          [ -z "$(git describe --tags --abbrev=0 "$GITHUB_SHA_VAL")" ] || echo "has_tags=true" >>  "$GITHUB_OUTPUT"
-          cat "$GITHUB_EVENT_PATH_VAL" | jq '.commits[].id' -r | while read -r ref; do
+          [ -z "$(git describe --tags --abbrev=0 "$GIT_SHA")" ] || echo "has_tags=true" >>  "$GITHUB_OUTPUT"
+          cat "$EVENT_PATH" | jq '.commits[].id' -r | while read -r ref; do
             if git diff-tree --root --no-commit-id --name-only -r "$ref" | grep -qE '^VERSION$' || git tag --points-at "$ref" | grep -qE '^v'; then continue; fi
             echo "$ref"
-          done | while read -r ref; do echo \""$ref"\"; done | jq -s | tr -d '\n' | tr -d ' ' | xargs -0 -I {} echo 'refs={}' >> "$GITHUB_OUTPUT"
+          done | while read -r ref; do echo \"$ref\"; done | jq -s | tr -d '\n' | tr -d ' ' | xargs -0 -I {} echo 'refs={}' >> "$GITHUB_OUTPUT"
   backport:
     if: ${{ !github.event.repository.fork && needs.setup.outputs.has_tags }}
     needs: setup
@@ -119,9 +119,9 @@ jobs:
           MATRIX_REF: ${{ matrix.ref }}
         run: |
           set -e
-          safe_commit_title="$(git log -1 --pretty=%s "$MATRIX_REF" | tr -d '\n\r')"
-          safe_author_name="$(git log -1 --pretty=%an "$MATRIX_REF" 2>/dev/null | tr -d '\n\r' || echo "")"
-          safe_author_email="$(git log -1 --pretty=%ae "$MATRIX_REF" 2>/dev/null | tr -d '\n\r' || echo "")"
+          safe_commit_title=$(git log -1 --pretty=%s "$MATRIX_REF" | tr -d '\n\r')
+          safe_author_name=$(git log -1 --pretty=%an "$MATRIX_REF" 2>/dev/null | tr -d '\n\r' || echo "")
+          safe_author_email=$(git log -1 --pretty=%ae "$MATRIX_REF" 2>/dev/null | tr -d '\n\r' || echo "")
           echo "commit_title=$safe_commit_title" >> "$GITHUB_OUTPUT"
           echo "author_name=$safe_author_name" >> "$GITHUB_OUTPUT"
           echo "author_email=$safe_author_email" >> "$GITHUB_OUTPUT"
