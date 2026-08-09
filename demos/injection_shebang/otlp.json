@@ -1,0 +1,1936 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "telemetry.sdk.language",
+            "value": {
+              "stringValue": "shell"
+            }
+          },
+          {
+            "key": "telemetry.sdk.name",
+            "value": {
+              "stringValue": "opentelemetry"
+            }
+          },
+          {
+            "key": "telemetry.sdk.version",
+            "value": {
+              "stringValue": "5.28.1"
+            }
+          },
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "unknown_service"
+            }
+          },
+          {
+            "key": "azure.vm.scaleset.name",
+            "value": {
+              "stringValue": ""
+            }
+          },
+          {
+            "key": "azure.vm.sku",
+            "value": {
+              "stringValue": ""
+            }
+          },
+          {
+            "key": "cloud.platform",
+            "value": {
+              "stringValue": "azure_vm"
+            }
+          },
+          {
+            "key": "cloud.provider",
+            "value": {
+              "stringValue": "azure"
+            }
+          },
+          {
+            "key": "cloud.region",
+            "value": {
+              "stringValue": "eastus2"
+            }
+          },
+          {
+            "key": "cloud.resource_id",
+            "value": {
+              "stringValue": "/subscriptions/f1e60c4a-99b5-4519-b5e3-ca4288d02052/resourceGroups/azure-eastus2-general-f1e60c4a-99b5-4519-b5e3-ca4288d02052/providers/Microsoft.Compute/virtualMachines/5FzDPtOSxDUpzW"
+            }
+          },
+          {
+            "key": "host.id",
+            "value": {
+              "stringValue": "2f57f47e-f848-40ea-bc85-2dc68447558e"
+            }
+          },
+          {
+            "key": "host.name",
+            "value": {
+              "stringValue": "5FzDPtOSxDUpzW"
+            }
+          },
+          {
+            "key": "host.type",
+            "value": {
+              "stringValue": "Standard_D4ads_v5"
+            }
+          },
+          {
+            "key": "os.type",
+            "value": {
+              "stringValue": "linux"
+            }
+          },
+          {
+            "key": "os.version",
+            "value": {
+              "stringValue": "6.11.0-1018-azure"
+            }
+          },
+          {
+            "key": "service.instance.id",
+            "value": {
+              "stringValue": ""
+            }
+          },
+          {
+            "key": "process.pid",
+            "value": {
+              "intValue": "3320"
+            }
+          },
+          {
+            "key": "process.parent_pid",
+            "value": {
+              "intValue": "2450"
+            }
+          },
+          {
+            "key": "process.executable.name",
+            "value": {
+              "stringValue": "dash"
+            }
+          },
+          {
+            "key": "process.executable.path",
+            "value": {
+              "stringValue": "/usr/bin/dash"
+            }
+          },
+          {
+            "key": "process.command_line",
+            "value": {
+              "stringValue": "/bin/sh /usr/bin/which bash"
+            }
+          },
+          {
+            "key": "process.command",
+            "value": {
+              "stringValue": "/bin/sh"
+            }
+          },
+          {
+            "key": "process.owner",
+            "value": {
+              "stringValue": "runner"
+            }
+          },
+          {
+            "key": "process.runtime.name",
+            "value": {
+              "stringValue": "dash"
+            }
+          },
+          {
+            "key": "process.runtime.description",
+            "value": {
+              "stringValue": "Debian Almquist Shell"
+            }
+          },
+          {
+            "key": "process.runtime.version",
+            "value": {
+              "stringValue": "0.5.12-6ubuntu5"
+            }
+          },
+          {
+            "key": "process.runtime.options",
+            "value": {
+              "stringValue": ""
+            }
+          },
+          {
+            "key": "service.version",
+            "value": {
+              "stringValue": ""
+            }
+          },
+          {
+            "key": "service.namespace",
+            "value": {
+              "stringValue": ""
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "shell",
+            "version": "5.28.1"
+          },
+          "spans": [
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "98c90b9891787bcc",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "test -n",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686047133184",
+              "endTimeUnixNano": "1759515686063218688",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "test -n"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "test"
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "test"
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "e8b2252e90626ec5",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "getopts as whichopts",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686065753600",
+              "endTimeUnixNano": "1759515686078957056",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "getopts as whichopts"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "getopts"
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "getopts"
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "aece3fea34ebf73f",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ 1 -eq 0 ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686081468928",
+              "endTimeUnixNano": "1759515686094973184",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ 1 -eq 0 ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "2ec9c2debc842706",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -z /snap/bin ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686097458176",
+              "endTimeUnixNano": "1759515686110869248",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -z /snap/bin ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "8737b1011919cc67",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -f /snap/bin/bash ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686113422848",
+              "endTimeUnixNano": "1759515686126996992",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -f /snap/bin/bash ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "6660ab2b59ea048f",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -z /home/runner/.local/bin ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686129447168",
+              "endTimeUnixNano": "1759515686142827264",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -z /home/runner/.local/bin ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "5287f2ca7ed6994a",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -f /home/runner/.local/bin/bash ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686145265920",
+              "endTimeUnixNano": "1759515686158778880",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -f /home/runner/.local/bin/bash ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "3c4add21e3620bf8",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -z /opt/pipx_bin ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686161961984",
+              "endTimeUnixNano": "1759515686174982656",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -z /opt/pipx_bin ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "1266c2fa8835b69c",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -f /opt/pipx_bin/bash ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686177371392",
+              "endTimeUnixNano": "1759515686190972928",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -f /opt/pipx_bin/bash ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "d870d8a31729b851",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -z /home/runner/.cargo/bin ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686193438976",
+              "endTimeUnixNano": "1759515686207555072",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -z /home/runner/.cargo/bin ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "09cbac7edeb6ca2a",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -f /home/runner/.cargo/bin/bash ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686210052352",
+              "endTimeUnixNano": "1759515686223744512",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -f /home/runner/.cargo/bin/bash ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "ebe3d00d1e5f136a",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -z /home/runner/.config/composer/vendor/bin ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686226189824",
+              "endTimeUnixNano": "1759515686239932672",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -z /home/runner/.config/composer/vendor/bin ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "84867f332481777c",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -f /home/runner/.config/composer/vendor/bin/bash ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686242364928",
+              "endTimeUnixNano": "1759515686255893248",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -f /home/runner/.config/composer/vendor/bin/bash ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "2d63e3559e40aaf0",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -z /usr/local/.ghcup/bin ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686258372352",
+              "endTimeUnixNano": "1759515686272159744",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -z /usr/local/.ghcup/bin ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "f001a73ec4714e75",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -f /usr/local/.ghcup/bin/bash ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686274702848",
+              "endTimeUnixNano": "1759515686288173824",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -f /usr/local/.ghcup/bin/bash ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "d7225e425767bc26",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -z /home/runner/.dotnet/tools ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686290709504",
+              "endTimeUnixNano": "1759515686304421632",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -z /home/runner/.dotnet/tools ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "1768283ca600a948",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -f /home/runner/.dotnet/tools/bash ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686306877952",
+              "endTimeUnixNano": "1759515686320732672",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -f /home/runner/.dotnet/tools/bash ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "e6a39b1d7781888b",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -z /usr/local/sbin ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686323155456",
+              "endTimeUnixNano": "1759515686336699904",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -z /usr/local/sbin ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "d365fcf1fd9698fd",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -f /usr/local/sbin/bash ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686339127296",
+              "endTimeUnixNano": "1759515686352685568",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -f /usr/local/sbin/bash ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "a1bff34362251096",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -z /usr/local/bin ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686355080960",
+              "endTimeUnixNano": "1759515686368600832",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -z /usr/local/bin ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "dfad698d02daf9d4",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -f /usr/local/bin/bash ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686371010304",
+              "endTimeUnixNano": "1759515686384553984",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -f /usr/local/bin/bash ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "219ed70522bae876",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -z /usr/sbin ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686386978816",
+              "endTimeUnixNano": "1759515686400526592",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -z /usr/sbin ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "9155a817032c2be9",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -f /usr/sbin/bash ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686402966272",
+              "endTimeUnixNano": "1759515686416499712",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -f /usr/sbin/bash ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "98696b580a5ebd2a",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -z /usr/bin ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686418948608",
+              "endTimeUnixNano": "1759515686432408832",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -z /usr/bin ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "a2d6c804834eeac1",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -f /usr/bin/bash ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686434886144",
+              "endTimeUnixNano": "1759515686448707584",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -f /usr/bin/bash ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "0"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {}
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "03f6a53c636a8a4a",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ -x /usr/bin/bash ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686451172352",
+              "endTimeUnixNano": "1759515686464774400",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ -x /usr/bin/bash ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "0"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {}
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "54891c7c86cc1373",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ 0 -eq 1 ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686467125760",
+              "endTimeUnixNano": "1759515686480949760",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ 0 -eq 1 ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "d73dba76d16da0e4",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ 0 -eq 1 ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686483426048",
+              "endTimeUnixNano": "1759515686497119744",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ 0 -eq 1 ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "02b57e50899c7c3c",
+              "parentSpanId": "a7dc75e859dc40f9",
+              "flags": 768,
+              "name": "[ 0 -ne 0 ]",
+              "kind": 1,
+              "startTimeUnixNano": "1759515686499550976",
+              "endTimeUnixNano": "1759515686513415936",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "[ 0 -ne 0 ]"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "builtin"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "["
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "1"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "/usr/bin/which"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "telemetry.sdk.language",
+            "value": {
+              "stringValue": "shell"
+            }
+          },
+          {
+            "key": "telemetry.sdk.name",
+            "value": {
+              "stringValue": "opentelemetry"
+            }
+          },
+          {
+            "key": "telemetry.sdk.version",
+            "value": {
+              "stringValue": "5.28.1"
+            }
+          },
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "unknown_service"
+            }
+          },
+          {
+            "key": "azure.vm.scaleset.name",
+            "value": {
+              "stringValue": ""
+            }
+          },
+          {
+            "key": "azure.vm.sku",
+            "value": {
+              "stringValue": ""
+            }
+          },
+          {
+            "key": "cloud.platform",
+            "value": {
+              "stringValue": "azure_vm"
+            }
+          },
+          {
+            "key": "cloud.provider",
+            "value": {
+              "stringValue": "azure"
+            }
+          },
+          {
+            "key": "cloud.region",
+            "value": {
+              "stringValue": "eastus2"
+            }
+          },
+          {
+            "key": "cloud.resource_id",
+            "value": {
+              "stringValue": "/subscriptions/f1e60c4a-99b5-4519-b5e3-ca4288d02052/resourceGroups/azure-eastus2-general-f1e60c4a-99b5-4519-b5e3-ca4288d02052/providers/Microsoft.Compute/virtualMachines/5FzDPtOSxDUpzW"
+            }
+          },
+          {
+            "key": "host.id",
+            "value": {
+              "stringValue": "2f57f47e-f848-40ea-bc85-2dc68447558e"
+            }
+          },
+          {
+            "key": "host.name",
+            "value": {
+              "stringValue": "5FzDPtOSxDUpzW"
+            }
+          },
+          {
+            "key": "host.type",
+            "value": {
+              "stringValue": "Standard_D4ads_v5"
+            }
+          },
+          {
+            "key": "os.type",
+            "value": {
+              "stringValue": "linux"
+            }
+          },
+          {
+            "key": "os.version",
+            "value": {
+              "stringValue": "6.11.0-1018-azure"
+            }
+          },
+          {
+            "key": "service.instance.id",
+            "value": {
+              "stringValue": ""
+            }
+          },
+          {
+            "key": "process.pid",
+            "value": {
+              "intValue": "2450"
+            }
+          },
+          {
+            "key": "process.parent_pid",
+            "value": {
+              "intValue": "2353"
+            }
+          },
+          {
+            "key": "process.executable.name",
+            "value": {
+              "stringValue": "bash"
+            }
+          },
+          {
+            "key": "process.executable.path",
+            "value": {
+              "stringValue": "/usr/bin/bash"
+            }
+          },
+          {
+            "key": "process.command_line",
+            "value": {
+              "stringValue": "bash -e demo.sh"
+            }
+          },
+          {
+            "key": "process.command",
+            "value": {
+              "stringValue": "bash"
+            }
+          },
+          {
+            "key": "process.owner",
+            "value": {
+              "stringValue": "runner"
+            }
+          },
+          {
+            "key": "process.runtime.name",
+            "value": {
+              "stringValue": "bash"
+            }
+          },
+          {
+            "key": "process.runtime.description",
+            "value": {
+              "stringValue": "Bourne Again Shell"
+            }
+          },
+          {
+            "key": "process.runtime.version",
+            "value": {
+              "stringValue": "5.2.21-2ubuntu4"
+            }
+          },
+          {
+            "key": "process.runtime.options",
+            "value": {
+              "stringValue": "ehB"
+            }
+          },
+          {
+            "key": "service.version",
+            "value": {
+              "stringValue": ""
+            }
+          },
+          {
+            "key": "service.namespace",
+            "value": {
+              "stringValue": ""
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "shell",
+            "version": "5.28.1"
+          },
+          "spans": [
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "a7dc75e859dc40f9",
+              "parentSpanId": "2e1892d903ee7ab3",
+              "flags": 768,
+              "name": "/bin/sh /usr/bin/which bash",
+              "kind": 1,
+              "startTimeUnixNano": "1759515685315226624",
+              "endTimeUnixNano": "1759515686547525632",
+              "attributes": [
+                {
+                  "key": "shell.command_line",
+                  "value": {
+                    "stringValue": "/bin/sh /usr/bin/which bash"
+                  }
+                },
+                {
+                  "key": "shell.command",
+                  "value": {
+                    "stringValue": "/bin/sh"
+                  }
+                },
+                {
+                  "key": "shell.command.type",
+                  "value": {
+                    "stringValue": "file"
+                  }
+                },
+                {
+                  "key": "shell.command.name",
+                  "value": {
+                    "stringValue": "sh"
+                  }
+                },
+                {
+                  "key": "subprocess.executable.path",
+                  "value": {
+                    "stringValue": "/bin/sh"
+                  }
+                },
+                {
+                  "key": "subprocess.executable.name",
+                  "value": {
+                    "stringValue": "sh"
+                  }
+                },
+                {
+                  "key": "shell.command.exit_code",
+                  "value": {
+                    "intValue": "0"
+                  }
+                },
+                {
+                  "key": "code.filepath",
+                  "value": {
+                    "stringValue": "demo.sh"
+                  }
+                },
+                {
+                  "key": "code.lineno",
+                  "value": {
+                    "intValue": "2"
+                  }
+                }
+              ],
+              "status": {}
+            },
+            {
+              "traceId": "87c96cf1b47d63a99b455288174c229e",
+              "spanId": "2e1892d903ee7ab3",
+              "flags": 256,
+              "name": "bash -e demo.sh",
+              "kind": 2,
+              "startTimeUnixNano": "1759515685303332352",
+              "endTimeUnixNano": "1759515686547701760",
+              "status": {}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
