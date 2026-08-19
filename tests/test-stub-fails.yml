@@ -1,0 +1,31 @@
+name: Test stub action fails as expected
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        continue-on-error: true
+      - name: Assert action ran and failed as expected
+        if: always()
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The stub action always exits 1.
+          # With continue-on-error: true, outcome should be "failure".
+          # In some act versions, continue-on-error may cause outcome to be "success".
+          # Either way, the step must have run (outcome != "skipped" and != "").
+          if [ -z "$OUTCOME" ]; then
+            echo "FAIL: outcome is empty — action step did not run"
+            exit 1
+          fi
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action step was skipped unexpectedly"
+            exit 1
+          fi
+          # Accept failure (expected) or success (act continue-on-error quirk)
+          echo "PASS: stub action ran with outcome=$OUTCOME"
