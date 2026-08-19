@@ -1,0 +1,22 @@
+
+on:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: plengauer/opentelemetry-github/actions/instrument/job@19061f1e87c01ed291ee56e45dacad3118106ffd # v5.53.1
+        env:
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+      - run: |
+          printenv
+          for script_file in "${RUNNER_TEMP}"/*-action-*/*/*.sh; do
+            echo "########## $script_file"
+            cat "$script_file"
+            echo "##############################"
+          done
+    permissions:
+      actions: read

@@ -1,0 +1,33 @@
+name: Initialize Fork
+on:
+  workflow_dispatch:
+jobs:
+  init:
+    if: ${{ github.event.repository.fork }}
+    runs-on: ubuntu-slim
+    permissions:
+      actions: read
+    steps:
+      - uses: plengauer/opentelemetry-github/actions/instrument/job@19061f1e87c01ed291ee56e45dacad3118106ffd # v5.53.1
+        env:
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+        with:
+          secrets_to_redact: '["${{ github.token }}","${{ secrets.ACTIONS_GITHUB_TOKEN }}"]'
+      - env:
+          ACTIONS_GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+        run: |
+          [ -n "$ACTIONS_GITHUB_TOKEN" ] # a token for a bot or real user that will be used for some automations, needs these scopes: delete:packages, repo, workflow, write:packages
+      - env:
+          ACTIONS_GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+        run: |
+          curl --fail -H "Authorization: Bearer $ACTIONS_GITHUB_TOKEN" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/actions/workflows'?per_page=100' | jq '.workflows[].id' \
+            | xargs -I '{}' curl --fail -H "Authorization: Bearer $ACTIONS_GITHUB_TOKEN" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_REPOSITORY"/actions/workflows/'{}'/enable -X PUT
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+      - run: |
+          tag=v"$(cat VERSION)"
+          git tag "$tag"
+          git push origin "$tag"
+      - run: echo ::notice::'The build and release workflow is running - it may take a few minutes up to a few hours (depending on the traffic on your GitHub runners) until the first release has been published.' >&2
