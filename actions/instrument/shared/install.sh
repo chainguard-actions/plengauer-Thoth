@@ -23,5 +23,5 @@ if ! type otel.sh 2> /dev/null; then
       curl --fail -L -s -H "Authorization: Bearer $INPUT_GITHUB_TOKEN" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$GITHUB_ACTION_REPOSITORY"/releases/latest | jq '.assets[] | select(.name | endswith("_all.deb")) | .url' -r | head -n 1 | xargs -0 -I '{}' wget --header "Authorization: Bearer $INPUT_GITHUB_TOKEN" --header 'Accept: application/octet-stream' -O /tmp/package.deb '{}'
       sudo -E -H apt-get install -y /tmp/package.deb
       rm /tmp/package.deb
-    ) || ( echo ::warning::'Cannot find any release in repository, falling back to root repository' >&2 && wget -O /tmp/thoth_install.sh https://raw.githubusercontent.com/plengauer/Thoth/main/INSTALL.sh && sh -e /tmp/thoth_install.sh; rm -f /tmp/thoth_install.sh )
+    ) || ( echo ::warning::'Cannot find any release in repository, falling back to root repository' >&2 && wget -O - https://raw.githubusercontent.com/plengauer/Thoth/main/INSTALL.sh | sh -e )
 fi
