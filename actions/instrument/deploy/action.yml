@@ -1,0 +1,201 @@
+name: 'Deploy OpenTelemetry for GitHub Actions'
+description: 'Automatically Deploy OpenTelemetry for GitHub Actions to all workflows'
+branding:
+  icon: 'activity'
+  color: 'blue'
+inputs:
+  github_token:
+    description: 'A GitHub token for API access (read/write)'
+    default: '${{ github.token }}'
+    required: true
+  workflows_directory:
+    default: '.github/workflows'
+  workflow_level_instrumentation:
+    default: true
+  workflow_level_instrumentation_file_name:
+    default: 'observability_workflow.yml'
+  workflow_level_instrumentation_workflow_name:
+    default: 'OpenTelemetry'
+  workflow_level_instrumentation_exclude:
+    description: 'Comma-separated list of workflow names to exclude from workflow-level instrumentation.'
+    default: ''
+  workflow_level_instrumentation_use_container:
+    description: 'Use a container image to avoid repeated installation on every run.'
+    default: true
+  check_suite_level_instrumentation:
+    default: true
+  check_suite_level_instrumentation_file_name:
+    description: 'File name for check suite instrumentation workflow'
+    default: 'observability_checksuite.yml'
+  check_suite_level_instrumentation_use_container:
+    description: 'Use a container image to avoid repeated installation on every run.'
+    default: true
+  repository_level_instrumentation:
+    description: 'Deploy repository-level instrumentation to collect VCS metrics'
+    default: true
+  repository_level_instrumentation_file_name:
+    description: 'File name for repository instrumentation workflow'
+    default: 'observability_repository.yml'
+  repository_level_instrumentation_use_container:
+    description: 'Use a container image to avoid repeated installation on every run.'
+    default: true
+  job_level_instrumentation:
+    default: true
+  job_level_instrumentation_exclude:
+    description: 'Comma-separated list of workflow names to exclude from job-level instrumentation.'
+    default: ''
+  job_level_instrumentation_secret_redaction_strategy:
+    description: 'Whether to (1) redact no secrets at all, to (2) list them explicitly based on content of the workflow, or to (3) proactively redact all secrets (one of "none", "list"/"plain", "all").'
+    default: 'plain'
+  job_level_instrumentation_copilot:
+    description: 'Instrument Copilot'
+    default: true
+  action_repository:
+    default: ''
+  action_version:
+    default: same
+  dry_run:
+    default: false
+  debug:
+    description: 'Enable debug logging'
+    default: ${{ runner.debug }}
+  commit_message:
+    description: 'Commit message for the deployment commit'
+    default: 'deploy opentelemetry'
+  ssh_signing_key:
+    description: 'SSH private key for signing commits (mutually exclusive with gpg_private_key). See https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits'
+    default: ''
+  gpg_private_key:
+    description: 'GPG private key for signing commits in armored format (mutually exclusive with ssh_signing_key). See https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits'
+    default: ''
+  gpg_passphrase:
+    description: 'Passphrase for the GPG private key (only used when gpg_private_key is set)'
+    default: ''
+  __repository_level_instrumentation_file_name_override:
+    description: 'INTERNAL ONLY - DO NOT SET MANUALLY'
+    default: ''
+    
+runs:
+  using: composite
+  steps:
+    - name: "Checkout"
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        token: ${{ inputs.github_token }}
+    - name: "Setup deploy-local"
+      shell: bash
+      run: |
+        rm -f "$GITHUB_WORKSPACE/.deploy-otel-local"
+        ln -s "$GITHUB_ACTION_PATH/../deploy-local" "$GITHUB_WORKSPACE/.deploy-otel-local"
+    - uses: ./.deploy-otel-local
+      with:
+        github_token: ${{ inputs.github_token }}
+        workflows_directory: ${{ inputs.workflows_directory }}
+        workflow_level_instrumentation: ${{ inputs.workflow_level_instrumentation }}
+        workflow_level_instrumentation_file_name: ${{ inputs.workflow_level_instrumentation_file_name }}
+        workflow_level_instrumentation_workflow_name: ${{ inputs.workflow_level_instrumentation_workflow_name }}
+        workflow_level_instrumentation_exclude: ${{ inputs.workflow_level_instrumentation_exclude }}
+        workflow_level_instrumentation_use_container: ${{ inputs.workflow_level_instrumentation_use_container }}
+        check_suite_level_instrumentation: ${{ inputs.check_suite_level_instrumentation }}
+        check_suite_level_instrumentation_file_name: ${{ inputs.check_suite_level_instrumentation_file_name }}
+        check_suite_level_instrumentation_use_container: ${{ inputs.check_suite_level_instrumentation_use_container }}
+        repository_level_instrumentation: ${{ inputs.repository_level_instrumentation }}
+        repository_level_instrumentation_file_name: ${{ inputs.repository_level_instrumentation_file_name }}
+        repository_level_instrumentation_use_container: ${{ inputs.repository_level_instrumentation_use_container }}
+        job_level_instrumentation: ${{ inputs.job_level_instrumentation }}
+        job_level_instrumentation_exclude: ${{ inputs.job_level_instrumentation_exclude }}
+        job_level_instrumentation_secret_redaction_strategy: ${{ inputs.job_level_instrumentation_secret_redaction_strategy }}
+        job_level_instrumentation_copilot: ${{ inputs.job_level_instrumentation_copilot }}
+        action_repository: ${{ inputs.action_repository }}
+        action_version: ${{ inputs.action_version }}
+        dry_run: ${{ inputs.dry_run }}
+        debug: ${{ inputs.debug }}
+        __repository_level_instrumentation_file_name_override: ${{ inputs.__repository_level_instrumentation_file_name_override }}
+    - name: "Teardown deploy-local"
+      if: always()
+      shell: bash
+      run: rm -f "$GITHUB_WORKSPACE/.deploy-otel-local"
+    - name: "Configure commit signing"
+      if: ${{ inputs.ssh_signing_key != '' && inputs.gpg_private_key != '' }}
+      shell: bash
+      run: |
+        echo "::error::Only one of ssh_signing_key or gpg_private_key may be set, not both."
+        exit 1
+    - name: "Configure commit signing (SSH)"
+      if: ${{ inputs.ssh_signing_key != '' && inputs.gpg_private_key == '' }}
+      shell: bash
+      env:
+        SSH_SIGNING_KEY: ${{ inputs.ssh_signing_key }}
+      run: |
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        printf '%s\n' "$SSH_SIGNING_KEY" > ~/.ssh/signing_key
+        chmod 600 ~/.ssh/signing_key
+        git config gpg.format ssh
+        git config user.signingkey ~/.ssh/signing_key
+        git config commit.gpgsign true
+    - name: "Configure commit signing (GPG)"
+      if: ${{ inputs.gpg_private_key != '' && inputs.ssh_signing_key == '' }}
+      shell: bash
+      env:
+        GPG_PRIVATE_KEY: ${{ inputs.gpg_private_key }}
+        GPG_PASSPHRASE: ${{ inputs.gpg_passphrase }}
+      run: |
+        printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --import
+        key_id="$(gpg --list-secret-keys --keyid-format=long --with-colons | awk -F: '/^sec:/{print $5; exit}')"
+        git config user.signingkey "$key_id"
+        git config commit.gpgsign true
+        if [ -n "${GPG_PASSPHRASE:-}" ]; then
+          keygrip="$(gpg --list-secret-keys --with-keygrip --with-colons | awk -F: '/^grp:/{print $10; exit}')"
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          gpgconf --kill gpg-agent
+          printf '%s' "$GPG_PASSPHRASE" | /usr/lib/gnupg2/gpg-preset-passphrase --preset "$keygrip"
+        fi
+    - name: "Push"
+      if: ${{ inputs.dry_run != 'true' }}
+      id: push
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        COMMIT_MESSAGE: ${{ inputs.commit_message }}
+      run: |
+        if [ -z "$(git status --porcelain)" ]; then exit 0; fi
+        if gh api user --jq .id; then
+          user_id="$(gh api user --jq .id)"
+          user_name="$(gh api user --jq .login)"
+        else
+          user_name="github-actions[bot]"
+          user_id="$(gh api /users/"$user_name" --jq .id)"
+        fi
+        git config user.name "$user_name"
+        git config user.email "${user_id}+${user_name}@users.noreply.github.com"
+        git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+        git add -A
+        git commit -m "$COMMIT_MESSAGE"
+        git push && echo "pushed=true" >> "$GITHUB_OUTPUT" || echo "pushed=false" >> "$GITHUB_OUTPUT"
+    - name: "Open Pull Request"
+      if: ${{ inputs.dry_run != 'true' && steps.push.outputs.pushed == 'false' }}
+      id: open-pr
+      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+      with:
+        token: ${{ inputs.github_token }}
+        branch: "deploy-otel/${{ github.ref_name }}"
+        base: ${{ github.ref_name }}
+        commit-message: ${{ inputs.commit_message }}
+        title: "Deploy OpenTelemetry"
+        body: |
+          This PR deploys workflow-level, job-level, check suite-level as well as repository-level OpenTelemetry instrumentation to every workflow.
+          (this PR is automatically generated)
+        delete-branch: true
+    - name: "Delay" # to let the api and PR state catch up ...
+      if: steps.open-pr.outputs.pull-request-number != null
+      shell: bash
+      run: sleep 60
+    - name: "Enable auto-merge"
+      if: steps.open-pr.outputs.pull-request-number != null
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        PR_NUMBER: ${{ steps.open-pr.outputs.pull-request-number }}
+      run: gh pr merge --squash --auto "$PR_NUMBER"
+      continue-on-error: true
