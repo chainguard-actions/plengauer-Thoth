@@ -19,6 +19,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v5.59.0 | [`v5.59.0`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.59.0) | [`2169fb0`](https://github.com/plengauer/Thoth/commit/2169fb0fa9a8260fde99a2a185bbf99a5d63546e) |
 | v5.60.0 | [`v5.60.0`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.60.0) | [`571cbe8`](https://github.com/plengauer/Thoth/commit/571cbe85f925e8ba395a5fca68f47ef9c536106c) |
 | v5.60.1 | [`v5.60.1`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.60.1) | [`55a3a53`](https://github.com/plengauer/Thoth/commit/55a3a5380b8086fd31edcefff274e083caf192b9) |
+| v5.60.2 | [`v5.60.2`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.60.2) | [`de4a04f`](https://github.com/plengauer/Thoth/commit/de4a04f8f1b6376793f0f5c337352517294e2b42) |
 | v5.61.0 | [`v5.61.0`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.61.0) | [`592586c`](https://github.com/plengauer/Thoth/commit/592586c4b7c563e6c531db71680422bb3953bcb9) |
 | v5.61.1 | [`v5.61.1`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.61.1) | [`a00ae91`](https://github.com/plengauer/Thoth/commit/a00ae915cd63b3c372c912ff7019e08a0934b441) |
 
