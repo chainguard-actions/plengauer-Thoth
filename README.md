@@ -25,6 +25,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v5.61.2 | [`v5.61.2`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.61.2) | [`be259b5`](https://github.com/plengauer/Thoth/commit/be259b5ae1e13e2398a8b96dce8baeaddac0663d) |
 | v5.61.4 | [`v5.61.4`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.61.4) | [`4b71071`](https://github.com/plengauer/Thoth/commit/4b71071b2b044a176398118df98bb6b897a8458e) |
 | v5.61.5 | [`v5.61.5`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.61.5) | [`5bcdcda`](https://github.com/plengauer/Thoth/commit/5bcdcda002db860a69870d21a21bb5d1e5cf64c3) |
+| v5.61.6 | [`v5.61.6`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.61.6) | [`90080ce`](https://github.com/plengauer/Thoth/commit/90080cef5320e67a572c35687c635b08deb4b7a9) |
 | v5.62.0 | [`v5.62.0`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.62.0) | [`74b4658`](https://github.com/plengauer/Thoth/commit/74b46584d99a285f5f5300264c94538dcf6e9596) |
 
 ## Privacy
