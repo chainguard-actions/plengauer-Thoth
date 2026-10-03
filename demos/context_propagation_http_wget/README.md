@@ -1,0 +1,391 @@
+# Demo "Context Propagation with wget"
+This script shows context propagation via HTTP from a client (wget) to a server (ncat).
+## Script
+```bash
+otel4netcat_http ncat -l -c 'printf "HTTP/1.1 418 I'\''m a teapot\r\n\r\n"' 12345 & # fake http server
+sleep 5
+. otel.sh
+wget http://127.0.0.1:12345 || true
+```
+## Trace Structure Overview
+```bash
+send/receive
+bash -e demo.sh
+  wget http://127.0.0.1:12345
+    GET
+      GET
+        printf HTTP/1.1 418 I'm a teapot
+  true
+```
+## Full Trace
+```json
+{
+  "trace_id": "f89b4065aa341312b64ff014672d7d03",
+  "span_id": "3cfecbece46dfec2",
+  "parent_span_id": "49fbbfe93b9f945e",
+  "name": "GET",
+  "kind": "CLIENT",
+  "status": "ERROR",
+  "time_start": 1787425175181674496,
+  "time_end": 1787425175800316928,
+  "attributes": {
+    "network.protocol.name": "http",
+    "network.transport": "tcp",
+    "network.peer.address": "127.0.0.1",
+    "network.peer.port": 12345,
+    "server.address": "127.0.0.1",
+    "server.port": 12345,
+    "url.full": "http://127.0.0.1:12345/",
+    "url.path": "/",
+    "url.scheme": "http",
+    "user_agent.original": "wget",
+    "http.request.method": "GET",
+    "http.response.status_code": 418
+  },
+  "resource_attributes": {
+    "telemetry.sdk.language": "shell",
+    "telemetry.sdk.name": "opentelemetry",
+    "telemetry.sdk.version": "5.61.1",
+    "service.instance.id": "95731ed5-b548-499f-9125-bedf9b380f7d",
+    "service.name": "unknown_service",
+    "azure.vm.scaleset.name": "",
+    "azure.vm.sku": "",
+    "cloud.platform": "azure_vm",
+    "cloud.provider": "azure",
+    "cloud.region": "centralus",
+    "cloud.resource_id": "/subscriptions/e97bdf23-1132-4966-ba28-292fb8b62324/resourceGroups/azure-centralus-general-e97bdf23-1132-4966-ba28-292fb8b62324/providers/Microsoft.Compute/virtualMachines/I5b9E6DDRINze2",
+    "host.id": "f5967b7c-34f5-4ffe-9644-e89defeb938b",
+    "host.name": "I5b9E6DDRINze2",
+    "host.type": "Standard_D4ds_v7",
+    "os.type": "linux",
+    "os.version": "6.17.0-1022-azure",
+    "process.pid": 3316,
+    "process.parent_pid": 2718,
+    "process.executable.name": "bash",
+    "process.executable.path": "/usr/bin/bash",
+    "process.command_line": "bash -e demo.sh",
+    "process.command": "bash",
+    "process.owner": "runner",
+    "process.runtime.name": "bash",
+    "process.runtime.description": "Bourne Again Shell",
+    "process.runtime.version": "5.2.21-2ubuntu4",
+    "process.runtime.options": "ehB"
+  },
+  "links": [],
+  "events": []
+}
+{
+  "trace_id": "f89b4065aa341312b64ff014672d7d03",
+  "span_id": "08fabd70a1700dec",
+  "parent_span_id": "3cfecbece46dfec2",
+  "name": "GET",
+  "kind": "SERVER",
+  "status": "UNSET",
+  "time_start": 1787425175741327104,
+  "time_end": 1787425175802850816,
+  "attributes": {
+    "network.transport": "TCP",
+    "network.peer.address": "127.0.0.1",
+    "network.peer.port": 55706,
+    "server.address": "127.0.0.1",
+    "server.port": 12345,
+    "client.address": "127.0.0.1",
+    "client.port": 55706,
+    "network.protocol.name": "http",
+    "network.protocol.version": "1.1",
+    "url.full": "http://:12345/",
+    "url.path": "/",
+    "url.scheme": "http",
+    "http.request.method": "GET",
+    "http.request.body.size": 0,
+    "http.response.status_code": 418,
+    "http.response.body.size": 0
+  },
+  "resource_attributes": {
+    "telemetry.sdk.language": "shell",
+    "telemetry.sdk.name": "opentelemetry",
+    "telemetry.sdk.version": "5.61.1",
+    "service.instance.id": "a7dbf117-f853-4562-8c81-87b66518a539",
+    "service.name": "unknown_service",
+    "azure.vm.scaleset.name": "",
+    "azure.vm.sku": "",
+    "cloud.platform": "azure_vm",
+    "cloud.provider": "azure",
+    "cloud.region": "centralus",
+    "cloud.resource_id": "/subscriptions/e97bdf23-1132-4966-ba28-292fb8b62324/resourceGroups/azure-centralus-general-e97bdf23-1132-4966-ba28-292fb8b62324/providers/Microsoft.Compute/virtualMachines/I5b9E6DDRINze2",
+    "host.id": "f5967b7c-34f5-4ffe-9644-e89defeb938b",
+    "host.name": "I5b9E6DDRINze2",
+    "host.type": "Standard_D4ds_v7",
+    "os.type": "linux",
+    "os.version": "6.17.0-1022-azure",
+    "process.pid": 4220,
+    "process.parent_pid": 4219,
+    "process.executable.name": "dash",
+    "process.executable.path": "/usr/bin/dash",
+    "process.command_line": "/bin/sh -e /usr/bin/otel4netcat_handler printf HTTP/1.1 418 I'm a teapot",
+    "process.command": "/bin/sh",
+    "process.owner": "runner",
+    "process.runtime.name": "dash",
+    "process.runtime.description": "Debian Almquist Shell",
+    "process.runtime.version": "0.5.12-6ubuntu5",
+    "process.runtime.options": "e"
+  },
+  "links": [
+    {
+      "trace_id": "6a057c96ae21ce9d6622b748f7c7a886",
+      "span_id": "bf2a3b7f15d0a741",
+      "attributes": {}
+    }
+  ],
+  "events": []
+}
+{
+  "trace_id": "f89b4065aa341312b64ff014672d7d03",
+  "span_id": "13dd6a167c651595",
+  "parent_span_id": null,
+  "name": "bash -e demo.sh",
+  "kind": "SERVER",
+  "status": "UNSET",
+  "time_start": 1787425175061098496,
+  "time_end": 1787425175810231552,
+  "attributes": {},
+  "resource_attributes": {
+    "telemetry.sdk.language": "shell",
+    "telemetry.sdk.name": "opentelemetry",
+    "telemetry.sdk.version": "5.61.1",
+    "service.instance.id": "95731ed5-b548-499f-9125-bedf9b380f7d",
+    "service.name": "unknown_service",
+    "azure.vm.scaleset.name": "",
+    "azure.vm.sku": "",
+    "cloud.platform": "azure_vm",
+    "cloud.provider": "azure",
+    "cloud.region": "centralus",
+    "cloud.resource_id": "/subscriptions/e97bdf23-1132-4966-ba28-292fb8b62324/resourceGroups/azure-centralus-general-e97bdf23-1132-4966-ba28-292fb8b62324/providers/Microsoft.Compute/virtualMachines/I5b9E6DDRINze2",
+    "host.id": "f5967b7c-34f5-4ffe-9644-e89defeb938b",
+    "host.name": "I5b9E6DDRINze2",
+    "host.type": "Standard_D4ds_v7",
+    "os.type": "linux",
+    "os.version": "6.17.0-1022-azure",
+    "process.pid": 3316,
+    "process.parent_pid": 2718,
+    "process.executable.name": "bash",
+    "process.executable.path": "/usr/bin/bash",
+    "process.command_line": "bash -e demo.sh",
+    "process.command": "bash",
+    "process.owner": "runner",
+    "process.runtime.name": "bash",
+    "process.runtime.description": "Bourne Again Shell",
+    "process.runtime.version": "5.2.21-2ubuntu4",
+    "process.runtime.options": "ehB"
+  },
+  "links": [],
+  "events": []
+}
+{
+  "trace_id": "f89b4065aa341312b64ff014672d7d03",
+  "span_id": "c7553c593562d65f",
+  "parent_span_id": "08fabd70a1700dec",
+  "name": "printf HTTP/1.1 418 I'm a teapot",
+  "kind": "INTERNAL",
+  "status": "UNSET",
+  "time_start": 1787425175748178688,
+  "time_end": 1787425175753824000,
+  "attributes": {
+    "shell.command_line": "printf HTTP/1.1 418 I'm a teapot",
+    "shell.command": "printf",
+    "shell.command.type": "builtin",
+    "shell.command.name": "printf",
+    "shell.command.exit_code": 0,
+    "code.filepath": "/usr/bin/otel4netcat_handler"
+  },
+  "resource_attributes": {
+    "telemetry.sdk.language": "shell",
+    "telemetry.sdk.name": "opentelemetry",
+    "telemetry.sdk.version": "5.61.1",
+    "service.instance.id": "a7dbf117-f853-4562-8c81-87b66518a539",
+    "service.name": "unknown_service",
+    "azure.vm.scaleset.name": "",
+    "azure.vm.sku": "",
+    "cloud.platform": "azure_vm",
+    "cloud.provider": "azure",
+    "cloud.region": "centralus",
+    "cloud.resource_id": "/subscriptions/e97bdf23-1132-4966-ba28-292fb8b62324/resourceGroups/azure-centralus-general-e97bdf23-1132-4966-ba28-292fb8b62324/providers/Microsoft.Compute/virtualMachines/I5b9E6DDRINze2",
+    "host.id": "f5967b7c-34f5-4ffe-9644-e89defeb938b",
+    "host.name": "I5b9E6DDRINze2",
+    "host.type": "Standard_D4ds_v7",
+    "os.type": "linux",
+    "os.version": "6.17.0-1022-azure",
+    "process.pid": 4220,
+    "process.parent_pid": 4219,
+    "process.executable.name": "dash",
+    "process.executable.path": "/usr/bin/dash",
+    "process.command_line": "/bin/sh -e /usr/bin/otel4netcat_handler printf HTTP/1.1 418 I'm a teapot",
+    "process.command": "/bin/sh",
+    "process.owner": "runner",
+    "process.runtime.name": "dash",
+    "process.runtime.description": "Debian Almquist Shell",
+    "process.runtime.version": "0.5.12-6ubuntu5",
+    "process.runtime.options": "e"
+  },
+  "links": [],
+  "events": []
+}
+{
+  "trace_id": "6a057c96ae21ce9d6622b748f7c7a886",
+  "span_id": "bf2a3b7f15d0a741",
+  "parent_span_id": null,
+  "name": "send/receive",
+  "kind": "CONSUMER",
+  "status": "UNSET",
+  "time_start": 1787425175541944576,
+  "time_end": 1787425175804145664,
+  "attributes": {
+    "network.transport": "TCP",
+    "network.peer.address": "127.0.0.1",
+    "network.peer.port": 55706,
+    "server.address": "127.0.0.1",
+    "server.port": 12345,
+    "client.address": "127.0.0.1",
+    "client.port": 55706
+  },
+  "resource_attributes": {
+    "telemetry.sdk.language": "shell",
+    "telemetry.sdk.name": "opentelemetry",
+    "telemetry.sdk.version": "5.61.1",
+    "service.instance.id": "a7dbf117-f853-4562-8c81-87b66518a539",
+    "service.name": "unknown_service",
+    "azure.vm.scaleset.name": "",
+    "azure.vm.sku": "",
+    "cloud.platform": "azure_vm",
+    "cloud.provider": "azure",
+    "cloud.region": "centralus",
+    "cloud.resource_id": "/subscriptions/e97bdf23-1132-4966-ba28-292fb8b62324/resourceGroups/azure-centralus-general-e97bdf23-1132-4966-ba28-292fb8b62324/providers/Microsoft.Compute/virtualMachines/I5b9E6DDRINze2",
+    "host.id": "f5967b7c-34f5-4ffe-9644-e89defeb938b",
+    "host.name": "I5b9E6DDRINze2",
+    "host.type": "Standard_D4ds_v7",
+    "os.type": "linux",
+    "os.version": "6.17.0-1022-azure",
+    "process.pid": 4220,
+    "process.parent_pid": 4219,
+    "process.executable.name": "dash",
+    "process.executable.path": "/usr/bin/dash",
+    "process.command_line": "/bin/sh -e /usr/bin/otel4netcat_handler printf HTTP/1.1 418 I'm a teapot",
+    "process.command": "/bin/sh",
+    "process.owner": "runner",
+    "process.runtime.name": "dash",
+    "process.runtime.description": "Debian Almquist Shell",
+    "process.runtime.version": "0.5.12-6ubuntu5",
+    "process.runtime.options": "e"
+  },
+  "links": [
+    {
+      "trace_id": "f89b4065aa341312b64ff014672d7d03",
+      "span_id": "08fabd70a1700dec",
+      "attributes": {}
+    }
+  ],
+  "events": []
+}
+{
+  "trace_id": "f89b4065aa341312b64ff014672d7d03",
+  "span_id": "39259eb0d3f4befc",
+  "parent_span_id": "13dd6a167c651595",
+  "name": "true",
+  "kind": "INTERNAL",
+  "status": "UNSET",
+  "time_start": 1787425175804446464,
+  "time_end": 1787425175810070784,
+  "attributes": {
+    "shell.command_line": "true",
+    "shell.command": "true",
+    "shell.command.type": "builtin",
+    "shell.command.name": "true",
+    "shell.command.exit_code": 0,
+    "code.filepath": "demo.sh",
+    "code.lineno": 4
+  },
+  "resource_attributes": {
+    "telemetry.sdk.language": "shell",
+    "telemetry.sdk.name": "opentelemetry",
+    "telemetry.sdk.version": "5.61.1",
+    "service.instance.id": "95731ed5-b548-499f-9125-bedf9b380f7d",
+    "service.name": "unknown_service",
+    "azure.vm.scaleset.name": "",
+    "azure.vm.sku": "",
+    "cloud.platform": "azure_vm",
+    "cloud.provider": "azure",
+    "cloud.region": "centralus",
+    "cloud.resource_id": "/subscriptions/e97bdf23-1132-4966-ba28-292fb8b62324/resourceGroups/azure-centralus-general-e97bdf23-1132-4966-ba28-292fb8b62324/providers/Microsoft.Compute/virtualMachines/I5b9E6DDRINze2",
+    "host.id": "f5967b7c-34f5-4ffe-9644-e89defeb938b",
+    "host.name": "I5b9E6DDRINze2",
+    "host.type": "Standard_D4ds_v7",
+    "os.type": "linux",
+    "os.version": "6.17.0-1022-azure",
+    "process.pid": 3316,
+    "process.parent_pid": 2718,
+    "process.executable.name": "bash",
+    "process.executable.path": "/usr/bin/bash",
+    "process.command_line": "bash -e demo.sh",
+    "process.command": "bash",
+    "process.owner": "runner",
+    "process.runtime.name": "bash",
+    "process.runtime.description": "Bourne Again Shell",
+    "process.runtime.version": "5.2.21-2ubuntu4",
+    "process.runtime.options": "ehB"
+  },
+  "links": [],
+  "events": []
+}
+{
+  "trace_id": "f89b4065aa341312b64ff014672d7d03",
+  "span_id": "49fbbfe93b9f945e",
+  "parent_span_id": "13dd6a167c651595",
+  "name": "wget http://127.0.0.1:12345",
+  "kind": "INTERNAL",
+  "status": "ERROR",
+  "time_start": 1787425175066949888,
+  "time_end": 1787425175801518336,
+  "attributes": {
+    "shell.command_line": "wget http://127.0.0.1:12345",
+    "shell.command": "wget",
+    "shell.command.type": "file",
+    "shell.command.name": "wget",
+    "subprocess.executable.path": "/usr/bin/wget",
+    "subprocess.executable.name": "wget",
+    "shell.command.exit_code": 8,
+    "code.filepath": "demo.sh",
+    "code.lineno": 4
+  },
+  "resource_attributes": {
+    "telemetry.sdk.language": "shell",
+    "telemetry.sdk.name": "opentelemetry",
+    "telemetry.sdk.version": "5.61.1",
+    "service.instance.id": "95731ed5-b548-499f-9125-bedf9b380f7d",
+    "service.name": "unknown_service",
+    "azure.vm.scaleset.name": "",
+    "azure.vm.sku": "",
+    "cloud.platform": "azure_vm",
+    "cloud.provider": "azure",
+    "cloud.region": "centralus",
+    "cloud.resource_id": "/subscriptions/e97bdf23-1132-4966-ba28-292fb8b62324/resourceGroups/azure-centralus-general-e97bdf23-1132-4966-ba28-292fb8b62324/providers/Microsoft.Compute/virtualMachines/I5b9E6DDRINze2",
+    "host.id": "f5967b7c-34f5-4ffe-9644-e89defeb938b",
+    "host.name": "I5b9E6DDRINze2",
+    "host.type": "Standard_D4ds_v7",
+    "os.type": "linux",
+    "os.version": "6.17.0-1022-azure",
+    "process.pid": 3316,
+    "process.parent_pid": 2718,
+    "process.executable.name": "bash",
+    "process.executable.path": "/usr/bin/bash",
+    "process.command_line": "bash -e demo.sh",
+    "process.command": "bash",
+    "process.owner": "runner",
+    "process.runtime.name": "bash",
+    "process.runtime.description": "Bourne Again Shell",
+    "process.runtime.version": "5.2.21-2ubuntu4",
+    "process.runtime.options": "ehB"
+  },
+  "links": [],
+  "events": []
+}
+```
