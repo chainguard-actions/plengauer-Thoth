@@ -157,7 +157,7 @@ runs:
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.github_token }}
-        COMMIT_MESSAGE: ${{ inputs.commit_message }}
+        INPUT_COMMIT_MESSAGE: ${{ inputs.commit_message }}
       run: |
         if [ -z "$(git status --porcelain)" ]; then exit 0; fi
         if gh api user --jq .id; then
@@ -171,7 +171,7 @@ runs:
         git config user.email "${user_id}+${user_name}@users.noreply.github.com"
         git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
         git add -A
-        git commit -m "$COMMIT_MESSAGE"
+        git commit -m "$INPUT_COMMIT_MESSAGE"
         git push && echo "pushed=true" >> "$GITHUB_OUTPUT" || echo "pushed=false" >> "$GITHUB_OUTPUT"
     - name: "Open Pull Request"
       if: ${{ inputs.dry_run != 'true' && steps.push.outputs.pushed == 'false' }}
@@ -188,12 +188,14 @@ runs:
           (this PR is automatically generated)
         delete-branch: true
     - name: "Delay" # to let the api and PR state catch up ...
-      if: steps.open-pr.outputs.pull-request-number != nul    - name: "Enable auto-merge"
+      if: steps.open-pr.outputs.pull-request-number != null
+      shell: bash
+      run: sleep 60
+    - name: "Enable auto-merge"
       if: steps.open-pr.outputs.pull-request-number != null
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.github_token }}
         PR_NUMBER: ${{ steps.open-pr.outputs.pull-request-number }}
       run: gh pr merge --squash --auto "$PR_NUMBER"
-      continue-on-error: trueb_token }}
       continue-on-error: true
