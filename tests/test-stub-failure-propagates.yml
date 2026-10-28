@@ -1,0 +1,25 @@
+name: Test stub failure is detectable by later steps
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        continue-on-error: true
+      - name: Record whether failure branch ran
+        id: marker
+        if: steps.action.outcome == 'failure'
+        run: echo "ran=true" >> "$GITHUB_OUTPUT"
+      - name: Assert failure branch executed
+        env:
+          RAN: ${{ steps.marker.outputs.ran }}
+        run: |
+          echo "ran: $RAN"
+          if [ "$RAN" != "true" ]; then
+            echo "FAIL: stub action did not report failure"
+            exit 1
+          fi
+          echo "PASS"
