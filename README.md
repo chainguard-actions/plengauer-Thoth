@@ -31,6 +31,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v5.63.0 | [`v5.63.0`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.63.0) | [`48918a1`](https://github.com/plengauer/Thoth/commit/48918a17e96079ba32d8379d536c89679ab39340) | [`HARDENING.md`](https://github.com/chainguard-actions/plengauer-Thoth/blob/v5.63.0/HARDENING.md) |
 | v5.63.1 | [`v5.63.1`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.63.1) | [`a320277`](https://github.com/plengauer/Thoth/commit/a3202770e6f9c17a81f2a7fd1073352b814d99b1) | [`HARDENING.md`](https://github.com/chainguard-actions/plengauer-Thoth/blob/v5.63.1/HARDENING.md) |
 | v5.64.0 | [`v5.64.0`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.64.0) | [`cae2906`](https://github.com/plengauer/Thoth/commit/cae29061ec48de46feefdc8131c776a9af11da6f) | [`HARDENING.md`](https://github.com/chainguard-actions/plengauer-Thoth/blob/v5.64.0/HARDENING.md) |
+| v5.65.0 | [`v5.65.0`](https://github.com/chainguard-actions/plengauer-Thoth/tree/v5.65.0) | [`93ce0b6`](https://github.com/plengauer/Thoth/commit/93ce0b69b0f9f22a50cc67b08f4a55c84616b5bd) | [`HARDENING.md`](https://github.com/chainguard-actions/plengauer-Thoth/blob/v5.65.0/HARDENING.md) |
 
 ## Privacy
 
