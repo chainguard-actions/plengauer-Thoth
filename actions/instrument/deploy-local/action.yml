@@ -163,8 +163,8 @@ runs:
         elif printf '%s\n' "$INPUT_ACTION_VERSION" | grep -qE '^v[0-9]'; then
           comment="$INPUT_ACTION_VERSION"
         fi
-        comment="$(printf '%s' "$comment" | tr -d '\n\r')"
-        [ -z "$comment" ] || echo "comment=# $comment" >> "$GITHUB_OUTPUT"
+        safe="$(printf '%s' "$comment" | tr -d '\n\r')"
+        [ -z "$safe" ] || echo "comment=# $safe" >> "$GITHUB_OUTPUT"
     - name: Canonicalize
       shell: bash
       env:
@@ -208,14 +208,14 @@ runs:
       if: ${{ inputs.workflow_level_instrumentation == 'true' && steps.find-workflow-level-instrumentation.outputs.path == null }}
       shell: bash
       env:
-        WORKFLOW_NAME: ${{ inputs.workflow_level_instrumentation_workflow_name }}
+        WORKFLOW_LEVEL_WORKFLOW_NAME: ${{ inputs.workflow_level_instrumentation_workflow_name }}
         WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
-        FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
-        SELF_PATH: ${{ steps.find-self.outputs.path }}
+        WORKFLOW_LEVEL_FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
         REPOSITORY: ${{ steps.determine-repository.outputs.repository }}
         VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
+        SELF_PATH: ${{ steps.find-self.outputs.path }}
       run: |
-        echo 'name: '"$WORKFLOW_NAME"'
+        echo 'name: '"$WORKFLOW_LEVEL_WORKFLOW_NAME"'
         on:
           workflow_run:
             workflows: []
@@ -226,10 +226,10 @@ runs:
             runs-on: ubuntu-latest
             steps:
               - uses: '"$REPOSITORY"'/actions/instrument/workflow@'"$VERSION"'
-        ' > "$WORKFLOWS_DIRECTORY/$FILE_NAME"
+        ' > "$WORKFLOWS_DIRECTORY/$WORKFLOW_LEVEL_FILE_NAME"
         cat "$SELF_PATH" | yq '.jobs[].steps[] | select(.uses == "'"$REPOSITORY"'/actions/instrument/deploy*") | .env // {} | keys[]' | { grep '^OTEL_' || true; } | while read -r key; do
           value="$(cat "$SELF_PATH" | yq '.jobs[].steps[] | select(.uses == "'"$REPOSITORY"'/actions/instrument/deploy*") | .env.'"$key")"
-          yq -i '.jobs[].steps[0].env.'"$key"' = "'"$value"'"' "$WORKFLOWS_DIRECTORY/$FILE_NAME"
+          yq -i '.jobs[].steps[0].env.'"$key"' = "'"$value"'"' "$WORKFLOWS_DIRECTORY/$WORKFLOW_LEVEL_FILE_NAME"
         done
     - name: "Deploy workflow-level startup optimization"
       if: ${{ inputs.workflow_level_instrumentation == 'true' && inputs.workflow_level_instrumentation_use_container == 'true' }}
@@ -258,18 +258,18 @@ runs:
       if: ${{ inputs.workflow_level_instrumentation == 'true' }}
       shell: bash
       env:
-        WORKFLOW_FOUND_PATH: ${{ steps.find-workflow-level-instrumentation.outputs.path }}
-        CHECK_SUITE_FOUND_PATH: ${{ steps.find-check-suite-level-instrumentation.outputs.path }}
-        REPOSITORY_FOUND_PATH: ${{ steps.find-repository-level-instrumentation.outputs.path }}
+        WORKFLOW_LEVEL_PATH: ${{ steps.find-workflow-level-instrumentation.outputs.path }}
+        CHECK_SUITE_LEVEL_PATH: ${{ steps.find-check-suite-level-instrumentation.outputs.path }}
+        REPOSITORY_LEVEL_PATH: ${{ steps.find-repository-level-instrumentation.outputs.path }}
         WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
-        WORKFLOW_FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
-        CHECK_SUITE_FILE_NAME: ${{ inputs.check_suite_instrumentation_file_name }}
-        REPOSITORY_FILE_NAME: ${{ inputs.repository_level_instrumentation_file_name }}
-        EXCLUDE: ${{ inputs.workflow_level_instrumentation_exclude }}
+        WORKFLOW_LEVEL_FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
+        CHECK_SUITE_INSTRUMENTATION_FILE_NAME: ${{ inputs.check_suite_instrumentation_file_name }}
+        REPOSITORY_LEVEL_FILE_NAME: ${{ inputs.repository_level_instrumentation_file_name }}
+        WORKFLOW_LEVEL_EXCLUDE: ${{ inputs.workflow_level_instrumentation_exclude }}
         INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
         REPOSITORY_NAME: ${{ github.repository }}
       run: |
-        if [ -w "$WORKFLOW_FOUND_PATH" ]; then path="$WORKFLOW_FOUND_PATH"; else path="$WORKFLOWS_DIRECTORY/$WORKFLOW_FILE_NAME"; fi
+        if [ -w "$WORKFLOW_LEVEL_PATH" ]; then path="$WORKFLOW_LEVEL_PATH"; else path="$WORKFLOWS_DIRECTORY/$WORKFLOW_LEVEL_FILE_NAME"; fi
         names_file="$(mktemp)"
         {
           (ls "$WORKFLOWS_DIRECTORY"/*.yaml "$WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
@@ -280,10 +280,10 @@ runs:
               echo "$name"
             fi
           done \
-            | ([ -n "$EXCLUDE" ] && grep -qvF "$(printf '%s\n' "$EXCLUDE" | tr ',' '\n' | tr ':' '\n' | tr ';' '\n')" || cat) \
-            | grep -vF "$([ -r "$WORKFLOW_FOUND_PATH" ] && cat "$WORKFLOW_FOUND_PATH" | yq .name || cat "$WORKFLOWS_DIRECTORY/$WORKFLOW_FILE_NAME" | yq .name)" \
-            | grep -vF "$([ -r "$CHECK_SUITE_FOUND_PATH" ] && cat "$CHECK_SUITE_FOUND_PATH" | yq .name || cat "$WORKFLOWS_DIRECTORY/$CHECK_SUITE_FILE_NAME" | yq .name)" \
-            | grep -vF "$([ -r "$REPOSITORY_FOUND_PATH" ] && cat "$REPOSITORY_FOUND_PATH" | yq .name || cat "$WORKFLOWS_DIRECTORY/$REPOSITORY_FILE_NAME" | yq .name)"
+            | ([ -n "$WORKFLOW_LEVEL_EXCLUDE" ] && grep -qvF "$(printf '%s\n' "$WORKFLOW_LEVEL_EXCLUDE" | tr ',' '\n' | tr ':' '\n' | tr ';' '\n')" || cat) \
+            | grep -vF "$([ -r "$WORKFLOW_LEVEL_PATH" ] && cat "$WORKFLOW_LEVEL_PATH" | yq .name || cat "$WORKFLOWS_DIRECTORY/$WORKFLOW_LEVEL_FILE_NAME" | yq .name)" \
+            | grep -vF "$([ -r "$CHECK_SUITE_LEVEL_PATH" ] && cat "$CHECK_SUITE_LEVEL_PATH" | yq .name || cat "$WORKFLOWS_DIRECTORY/$CHECK_SUITE_INSTRUMENTATION_FILE_NAME" | yq .name)" \
+            | grep -vF "$([ -r "$REPOSITORY_LEVEL_PATH" ] && cat "$REPOSITORY_LEVEL_PATH" | yq .name || cat "$WORKFLOWS_DIRECTORY/$REPOSITORY_LEVEL_FILE_NAME" | yq .name)"
           seq 1 10 | xargs -I '{}' curl -s --fail --retry 8 --header "Authorization: Bearer $INPUT_GITHUB_TOKEN" "${GITHUB_API_URL:-https://api.github.com}"/repos/"$REPOSITORY_NAME"/actions/workflows'?per_page=100&page={}' | jq '.workflows[] | select(.path | startswith("dynamic/")) | .name' -r
           echo Copilot # this one should be prefilled because it's very common and new
           echo Copilot code review # this one should be prefilled because it's very common and new
@@ -304,9 +304,9 @@ runs:
       env:
         WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
         FILE_NAME: ${{ inputs.check_suite_level_instrumentation_file_name }}
-        SELF_PATH: ${{ steps.find-self.outputs.path }}
         REPOSITORY: ${{ steps.determine-repository.outputs.repository }}
         VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
+        SELF_PATH: ${{ steps.find-self.outputs.path }}
       run: |
         path="$WORKFLOWS_DIRECTORY/$FILE_NAME"
         echo 'name: OpenTelemetry
@@ -357,9 +357,9 @@ runs:
       env:
         WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
         FILE_NAME: ${{ inputs.repository_level_instrumentation_file_name }}
-        SELF_PATH: ${{ steps.find-self.outputs.path }}
         REPOSITORY: ${{ steps.determine-repository.outputs.repository }}
         VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
+        SELF_PATH: ${{ steps.find-self.outputs.path }}
       run: |
         path="$WORKFLOWS_DIRECTORY/$FILE_NAME"
         echo 'name: OpenTelemetry
@@ -431,17 +431,17 @@ runs:
       shell: bash
       env:
         WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
-        EXCLUDE: ${{ inputs.job_level_instrumentation_exclude }}
-        WORKFLOW_FOUND_PATH: ${{ steps.find-workflow-level-instrumentation.outputs.path }}
-        WORKFLOW_FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
-        SELF_PATH: ${{ steps.find-self.outputs.path }}
+        JOB_LEVEL_EXCLUDE: ${{ inputs.job_level_instrumentation_exclude }}
+        WORKFLOW_LEVEL_PATH: ${{ steps.find-workflow-level-instrumentation.outputs.path }}
+        WORKFLOW_LEVEL_FILE_NAME: ${{ inputs.workflow_level_instrumentation_file_name }}
         REPOSITORY: ${{ steps.determine-repository.outputs.repository }}
         VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
+        SELF_PATH: ${{ steps.find-self.outputs.path }}
       run: |
         (ls "$WORKFLOWS_DIRECTORY"/*.yaml "$WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
-          [ -n "$EXCLUDE" ] && cat "$workflow_file" | yq .name | grep -qF "$(printf '%s\n' "$EXCLUDE" | tr ',' '\n' | tr ':' '\n' | tr ';' '\n')" && continue || true
-          [ "$workflow_file" != "$WORKFLOW_FOUND_PATH" ] || continue
-          [ "$workflow_file" != "$WORKFLOWS_DIRECTORY/$WORKFLOW_FILE_NAME" ] || continue
+          [ -n "$JOB_LEVEL_EXCLUDE" ] && cat "$workflow_file" | yq .name | grep -qF "$(printf '%s\n' "$JOB_LEVEL_EXCLUDE" | tr ',' '\n' | tr ':' '\n' | tr ';' '\n')" && continue || true
+          [ "$workflow_file" != "$WORKFLOW_LEVEL_PATH" ] || continue
+          [ "$workflow_file" != "$WORKFLOWS_DIRECTORY/$WORKFLOW_LEVEL_FILE_NAME" ] || continue
           cat "$workflow_file" | yq '.jobs | keys[]' | while read -r job_name; do
             cat "$workflow_file" | yq ".jobs.$job_name.steps" | grep -q '^null$' && continue || true
             cat "$workflow_file" | yq ".jobs.$job_name.container" | grep -q '^null$' || continue
@@ -524,13 +524,13 @@ runs:
       shell: bash
       env:
         VERSION: ${{ steps.determine-instrumentation-version.outputs.version }}
-        COMMENT: ${{ steps.determine-instrumentation-version-comment.outputs.comment }}
+        VERSION_COMMENT: ${{ steps.determine-instrumentation-version-comment.outputs.comment }}
         WORKFLOWS_DIRECTORY: ${{ inputs.workflows_directory }}
         REPOSITORY: ${{ steps.determine-repository.outputs.repository }}
       run: |
         version="$VERSION"
-        echo "$version" | grep -qE '^[0-9a-f]{40}$' || exit 0
-        comment="$COMMENT"
+        printf '%s\n' "$version" | grep -qE '^[0-9a-f]{40}$' || exit 0
+        comment="$VERSION_COMMENT"
         (ls "$WORKFLOWS_DIRECTORY"/*.yaml "$WORKFLOWS_DIRECTORY"/*.yml 2> /dev/null || true) | while read -r workflow_file; do
           for target in workflow checksuite repository job; do
             sed -i "s~^\([[:space:]]*- uses: $REPOSITORY/actions/instrument/$target@$version\)\$~\1 $comment~" "$workflow_file"
